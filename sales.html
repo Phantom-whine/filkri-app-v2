@@ -187,6 +187,7 @@ function renderSales() {
   
   if (list.length === 0) {
     container.innerHTML = '<div class="py-12 text-center text-xs text-slate-400">No sales match your filters</div>';
+    updateSummary();
     return;
   }
   
@@ -228,6 +229,7 @@ function renderSales() {
       </div>
     `;
   }).join('');
+  updateSummary();
 }
 
 function updateSummary() {
