@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#f97316">
+<title>Sign In — Fikri Store</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
+</style>
+</head>
+<body class="bg-slate-50 h-screen flex flex-col">
+
+<div class="flex-1 flex flex-col justify-center p-6 max-w-sm mx-auto w-full">
+  <div class="text-center mb-10">
+    <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-orange-200">
+      <i class="fa-solid fa-boxes-stacked text-white text-2xl"></i>
+    </div>
+    <h1 class="text-2xl font-bold text-slate-900 mb-1">Welcome Back</h1>
+    <p class="text-sm text-slate-400">Sign in to manage your inventory</p>
+  </div>
+  
+  <form id="loginForm" class="space-y-4">
+    <div>
+      <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Email Address</label>
+      <input type="email" id="email" value="admin@fikristore.com" required 
+        class="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3.5 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+    </div>
+    <div>
+      <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Password</label>
+      <input type="password" id="password" value="password" required 
+        class="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3.5 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+    </div>
+    <button type="submit" id="submitBtn" 
+      class="w-full bg-orange-500 active:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-orange-200 text-sm flex items-center justify-center gap-2 mt-2">
+      <span id="btnText">Sign In to Dashboard</span>
+      <i id="btnIcon" class="fa-solid fa-arrow-right text-xs"></i>
+    </button>
+  </form>
+  
+  <div class="mt-8 p-4 bg-slate-100 rounded-xl">
+    <p class="text-center text-[11px] text-slate-500 mb-2 font-semibold">Demo Credentials</p>
+    <div class="flex items-center justify-center gap-2 text-[11px] font-mono text-slate-600">
+      <span class="bg-white px-2 py-1 rounded border border-slate-200">admin@fikristore.com</span>
+      <span class="text-slate-300">/</span>
+      <span class="bg-white px-2 py-1 rounded border border-slate-200">password</span>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+App.init();
+if (App.isAuth()) window.location.href = 'dashboard.html';
+
+document.getElementById('loginForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const btnText = document.getElementById('btnText');
+  const btnIcon = document.getElementById('btnIcon');
+  const btn = document.getElementById('submitBtn');
+  
+  btnText.textContent = 'Authenticating...';
+  btnIcon.className = 'fa-solid fa-circle-notch fa-spin text-xs';
+  btn.disabled = true;
+  btn.classList.add('opacity-80');
+  
+  setTimeout(() => {
+    if (App.login(email, password)) {
+      btnText.textContent = 'Success!';
+      btnIcon.className = 'fa-solid fa-check text-xs';
+      setTimeout(() => window.location.href = 'dashboard.html', 400);
+    } else {
+      App.toast('Invalid email or password', 'xmark');
+      btnText.textContent = 'Sign In to Dashboard';
+      btnIcon.className = 'fa-solid fa-arrow-right text-xs';
+      btn.disabled = false;
+      btn.classList.remove('opacity-80');
+    }
+  }, 800);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#ffffff">
+<title>Suppliers — Fikri Store</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
+.font-mono { font-family: 'DM Mono', monospace; }
+@keyframes slideUp { from { opacity:0; transform: translateY(20px);} to { opacity:1; transform: translateY(0);} }
+.modal-enter { animation: modalIn 0.25s cubic-bezier(0.22,1,0.36,1) forwards; }
+@keyframes modalIn { from { opacity:0; transform: scale(0.95) translateY(10px);} to { opacity:1; transform: scale(1) translateY(0);} }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-24">
+
+<header class="bg-white sticky top-0 z-40 border-b border-slate-100 px-4 py-3">
+  <div class="flex items-center justify-between max-w-md mx-auto">
+    <h1 class="text-lg font-bold text-slate-900">Suppliers</h1>
+    <button onclick="openModal()" class="w-9 h-9 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition">
+      <i class="fa-solid fa-plus text-sm"></i>
+    </button>
+  </div>
+</header>
+
+<main class="max-w-md mx-auto p-4 space-y-4">
+  <div class="grid grid-cols-3 gap-3">
+    <div class="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm text-center">
+      <p class="font-mono text-lg font-bold text-slate-900" id="statTotal">0</p>
+      <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">Total</p>
+    </div>
+    <div class="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm text-center">
+      <p class="font-mono text-lg font-bold text-green-600" id="statActive">0</p>
+      <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">Active</p>
+    </div>
+    <div class="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm text-center">
+      <p class="font-mono text-lg font-bold text-slate-900" id="statBest">—</p>
+      <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">Best On-Time</p>
+    </div>
+  </div>
+
+  <div id="supplierList" class="grid grid-cols-1 gap-3"></div>
+
+  <div id="emptyState" class="hidden py-16 flex flex-col items-center text-center">
+    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+      <i class="fa-solid fa-truck text-2xl text-slate-300"></i>
+    </div>
+    <p class="font-bold text-slate-500 text-sm">No suppliers yet</p>
+    <p class="text-xs text-slate-400 mt-1 mb-4">Add your first supplier</p>
+    <button onclick="openModal()" class="bg-orange-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md active:scale-95 transition">Add Supplier</button>
+  </div>
+</main>
+
+<div id="supplierModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal()"></div>
+  <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-w-md mx-auto modal-enter max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white z-10 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="font-bold text-slate-900">Add Supplier</h2>
+      <button onclick="closeModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <form id="supplierForm" class="p-5 space-y-4">
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Company Name *</label>
+        <input type="text" id="supName" required placeholder="e.g. Urban Deals"
+          class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Country *</label>
+          <input type="text" id="supCountry" required placeholder="Indonesia"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Status</label>
+          <select id="supStatus"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Rating (1-5)</label>
+          <input type="number" id="supRating" min="1" max="5" step="0.1" placeholder="4.5"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">On-time %</label>
+          <input type="number" id="supOnTime" min="0" max="100" placeholder="90"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Email</label>
+        <input type="email" id="supEmail" placeholder="contact@supplier.com"
+          class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+      </div>
+      <button type="submit" class="w-full bg-orange-500 active:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
+        Add Supplier
+      </button>
+    </form>
+  </div>
+</div>
+
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 z-40 pb-safe">
+  <div class="flex justify-around items-center h-16 max-w-md mx-auto">
+    <a href="dashboard.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-slate-400">
+      <i class="fa-solid fa-house text-lg"></i>
+      <span class="text-[10px] font-medium">Home</span>
+    </a>
+    <a href="inventory.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-slate-400">
+      <i class="fa-solid fa-boxes-stacked text-lg"></i>
+      <span class="text-[10px] font-medium">Stock</span>
+    </a>
+    <a href="sales.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-slate-400">
+      <i class="fa-solid fa-chart-line text-lg"></i>
+      <span class="text-[10px] font-medium">Sales</span>
+    </a>
+    <a href="reports.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-orange-500">
+      <i class="fa-solid fa-file-invoice text-lg"></i>
+      <span class="text-[10px] font-semibold">Reports</span>
+    </a>
+  </div>
+</nav>
+
+<script src="app.js"></script>
+<script>
+App.init();
+if (!App.isAuth()) window.location.href = 'login.html';
+
+let suppliers = App.getSuppliers();
+
+function renderSuppliers() {
+  document.getElementById('statTotal').textContent = suppliers.length;
+  document.getElementById('statActive').textContent = suppliers.filter(s => s.status === 'Active').length;
+  const best = suppliers.length ? Math.max(...suppliers.map(s => s.onTime || 0)) : null;
+  document.getElementById('statBest').textContent = best !== null ? best + '%' : '—';
+  
+  const container = document.getElementById('supplierList');
+  if (suppliers.length === 0) {
+    document.getElementById('emptyState').classList.remove('hidden');
+    container.innerHTML = '';
+    return;
+  }
+  document.getElementById('emptyState').classList.add('hidden');
+  
+  container.innerHTML = suppliers.map((s, i) => `
+    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm" style="animation: slideUp 0.3s ease-out ${i*0.05}s forwards; opacity:0">
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center text-white text-base font-bold shadow-sm" style="background:${s.color}">
+            ${s.name.charAt(0)}
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-800">${s.name}</h3>
+            <p class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
+              <i class="fa-solid fa-location-dot text-[9px]"></i> ${s.country}
+            </p>
+          </div>
+        </div>
+        <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${s.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}">
+          ${s.status}
+        </span>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <div class="bg-slate-50 rounded-lg p-2.5 text-center">
+          <p class="font-mono text-sm font-bold text-amber-600">${s.rating ? s.rating + '★' : '—'}</p>
+          <p class="text-[9px] text-slate-400 font-medium mt-0.5">Rating</p>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-2.5 text-center">
+          <p class="font-mono text-xs font-bold text-slate-700 truncate">${s.email || '—'}</p>
+          <p class="text-[9px] text-slate-400 font-medium mt-0.5">Email</p>
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <div class="flex justify-between text-[10px] mb-1">
+          <span class="text-slate-500 font-medium">On-time delivery</span>
+          <span class="font-bold font-mono ${(s.onTime||0) >= 90 ? 'text-green-600' : (s.onTime||0) >= 75 ? 'text-amber-600' : 'text-red-500'}">${s.onTime || 0}%</span>
+        </div>
+        <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div class="h-full rounded-full ${(s.onTime||0) >= 90 ? 'bg-green-500' : (s.onTime||0) >= 75 ? 'bg-amber-400' : 'bg-red-400'} transition-all" style="width:${s.onTime || 0}%"></div>
+        </div>
+      </div>
+      
+      <div class="flex gap-2">
+        ${s.email ? `<a href="mailto:${s.email}" class="flex-1 text-[11px] font-semibold border border-slate-200 text-slate-600 py-2 rounded-lg flex items-center justify-center gap-1 active:bg-slate-50 transition">
+          <i class="fa-regular fa-envelope text-slate-400"></i> Contact
+        </a>` : '<div class="flex-1"></div>'}
+        <button onclick="deleteSupplier(${s.id})" class="flex-1 text-[11px] font-semibold bg-red-50 border border-red-200 text-red-500 py-2 rounded-lg flex items-center justify-center gap-1 active:bg-red-100 transition">
+          <i class="fa-solid fa-trash-can"></i> Delete
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openModal() {
+  document.getElementById('supplierForm').reset();
+  document.getElementById('supplierModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('supplierModal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function deleteSupplier(id) {
+  if (!confirm('Remove this supplier?')) return;
+  suppliers = suppliers.filter(s => s.id !== id);
+  App.saveSuppliers(suppliers);
+  renderSuppliers();
+  App.toast('Supplier removed', 'xmark');
+}
+
+document.getElementById('supplierForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('supName').value.trim();
+  const country = document.getElementById('supCountry').value.trim();
+  const status = document.getElementById('supStatus').value;
+  const rating = parseFloat(document.getElementById('supRating').value) || null;
+  const onTime = parseInt(document.getElementById('supOnTime').value) || 0;
+  const email = document.getElementById('supEmail').value.trim();
+  
+  suppliers.push({ id: Date.now(), name, country, status, rating, onTime, email, color: App.randColor() });
+  App.saveSuppliers(suppliers);
+  closeModal();
+  renderSuppliers();
+  App.toast('Supplier added!', 'check');
+});
+
+if (window.location.search.includes('action=add')) {
+  setTimeout(openModal, 300);
+}
+
+renderSuppliers();
+</script>
+</body>
+</html>

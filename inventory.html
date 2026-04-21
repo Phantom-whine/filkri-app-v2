@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#ffffff">
+<title>Inventory — Fikri Store</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
+.font-mono { font-family: 'DM Mono', monospace; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+@keyframes slideUp { from { opacity:0; transform: translateY(20px);} to { opacity:1; transform: translateY(0);} }
+.modal-enter { animation: modalIn 0.25s cubic-bezier(0.22,1,0.36,1) forwards; }
+@keyframes modalIn { from { opacity:0; transform: scale(0.95) translateY(10px);} to { opacity:1; transform: scale(1) translateY(0);} }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-24">
+
+<header class="bg-white sticky top-0 z-40 border-b border-slate-100 px-4 py-3">
+  <div class="flex items-center justify-between max-w-md mx-auto">
+    <h1 class="text-lg font-bold text-slate-900">Inventory</h1>
+    <button onclick="openAddModal()" class="w-9 h-9 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition">
+      <i class="fa-solid fa-plus text-sm"></i>
+    </button>
+  </div>
+</header>
+
+<main class="max-w-md mx-auto p-4 space-y-3">
+  <div class="space-y-2">
+    <div class="relative">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+      <input type="text" id="searchInput" placeholder="Search products, SKU..." 
+        class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+    </div>
+    <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+      <select id="catFilter" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-600 outline-none focus:border-orange-400">
+        <option value="all">All Categories</option>
+        <option>Electronic</option>
+        <option>Accessories</option>
+        <option>Peripherals</option>
+        <option>Clothing</option>
+        <option>Food & Beverage</option>
+        <option>Other</option>
+      </select>
+      <select id="stockFilter" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-600 outline-none focus:border-orange-400">
+        <option value="all">All Stock</option>
+        <option value="High">High Stock</option>
+        <option value="Low">Low Stock</option>
+        <option value="Out">Out of Stock</option>
+      </select>
+      <select id="sortBy" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-600 outline-none focus:border-orange-400">
+        <option value="name">Name</option>
+        <option value="priceDesc">Price: High</option>
+        <option value="price">Price: Low</option>
+        <option value="stock">Stock</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between bg-white rounded-xl px-4 py-2.5 border border-slate-100 shadow-sm">
+    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"><span id="resultCount">0</span> items</span>
+    <span class="font-mono text-xs font-bold text-slate-700">Value: <span id="totalValue">$0</span></span>
+  </div>
+
+  <div id="productList" class="space-y-2"></div>
+
+  <div id="emptyState" class="hidden py-16 flex flex-col items-center text-center">
+    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+      <i class="fa-solid fa-box-open text-2xl text-slate-300"></i>
+    </div>
+    <p class="font-bold text-slate-500 text-sm">No products yet</p>
+    <p class="text-xs text-slate-400 mt-1 mb-4">Add your first product to get started</p>
+    <button onclick="openAddModal()" class="bg-orange-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md active:scale-95 transition">Add Product</button>
+  </div>
+</main>
+
+<div id="productModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal()"></div>
+  <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-w-md mx-auto modal-enter max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white z-10 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="font-bold text-slate-900" id="modalTitle">Add Product</h2>
+      <button onclick="closeModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <form id="productForm" class="p-5 space-y-4">
+      <input type="hidden" id="editId">
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Product Name *</label>
+        <input type="text" id="pName" required placeholder="e.g. MacBook Air M2"
+          class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">SKU *</label>
+          <input type="text" id="pSku" required placeholder="MAC-001"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Category *</label>
+          <select id="pCategory" required
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+            <option value="">Select...</option>
+            <option>Electronic</option>
+            <option>Accessories</option>
+            <option>Peripherals</option>
+            <option>Clothing</option>
+            <option>Food & Beverage</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Sale Price ($) *</label>
+          <input type="number" id="pPrice" required min="0" step="0.01" placeholder="1299"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Cost Price ($) *</label>
+          <input type="number" id="pCost" required min="0" step="0.01" placeholder="980"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Stock Qty *</label>
+          <input type="number" id="pStock" required min="0" placeholder="100"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Supplier</label>
+          <input type="text" id="pSupplier" placeholder="Supplier name"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+      </div>
+      <input type="hidden" id="pImageData">
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Product Image</label>
+        <input type="file" id="pImage" accept="image/*"
+          class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none file:text-xs file:font-semibold file:rounded-lg file:border-0 file:px-3 file:py-2 file:bg-orange-50 file:text-orange-700 focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        <div id="imagePreview" class="hidden mt-3 rounded-3xl overflow-hidden border border-slate-200 shadow-sm inline-flex items-center justify-center">
+          <img id="pImagePreview" alt="Product image preview" class="w-24 h-24 object-cover">
+          <button type="button" id="removeImageBtn" class="ml-3 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition">Remove</button>
+        </div>
+      </div>
+      <div id="marginPreview" class="hidden bg-orange-50 border border-orange-100 rounded-xl px-4 py-3 flex items-center justify-between">
+        <span class="text-xs text-orange-700 font-semibold">Profit Margin</span>
+        <span class="font-mono font-bold text-orange-600 text-sm" id="marginValue">0%</span>
+      </div>
+      <button type="submit" class="w-full bg-orange-500 active:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
+        <span id="submitText">Add Product</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 z-40 pb-safe">
+  <div class="flex justify-around items-center h-16 max-w-md mx-auto">
+    <a href="dashboard.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-slate-400">
+      <i class="fa-solid fa-house text-lg"></i>
+      <span class="text-[10px] font-medium">Home</span>
+    </a>
+    <a href="inventory.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-orange-500">
+      <i class="fa-solid fa-boxes-stacked text-lg"></i>
+      <span class="text-[10px] font-semibold">Stock</span>
+    </a>
+    <a href="sales.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-slate-400">
+      <i class="fa-solid fa-chart-line text-lg"></i>
+      <span class="text-[10px] font-medium">Sales</span>
+    </a>
+    <a href="reports.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-slate-400">
+      <i class="fa-solid fa-file-invoice text-lg"></i>
+      <span class="text-[10px] font-medium">Reports</span>
+    </a>
+  </div>
+</nav>
+
+<script src="app.js"></script>
+<script>
+App.init();
+if (!App.isAuth()) window.location.href = 'login.html';
+
+let products = App.getProducts();
+
+function renderProducts() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+  const stock = document.getElementById('stockFilter').value;
+  const sort = document.getElementById('sortBy').value;
+  
+  let list = [...products];
+  if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
+  if (cat !== 'all') list = list.filter(p => p.category === cat);
+  if (stock !== 'all') {
+    if (stock === 'Out') list = list.filter(p => p.stock === 0);
+    else list = list.filter(p => p.stockLevel === stock && p.stock > 0);
+  }
+  if (sort === 'price') list.sort((a,b) => a.price - b.price);
+  else if (sort === 'priceDesc') list.sort((a,b) => b.price - a.price);
+  else if (sort === 'stock') list.sort((a,b) => b.stock - a.stock);
+  else list.sort((a,b) => a.name.localeCompare(b.name));
+  
+  document.getElementById('resultCount').textContent = list.length;
+  document.getElementById('totalValue').textContent = '$' + list.reduce((s,p) => s + (p.stock * p.costPrice), 0).toLocaleString();
+  
+  const container = document.getElementById('productList');
+  if (products.length === 0) {
+    document.getElementById('emptyState').classList.remove('hidden');
+    container.innerHTML = '';
+    return;
+  }
+  document.getElementById('emptyState').classList.add('hidden');
+  
+  if (list.length === 0) {
+    container.innerHTML = '<div class="py-12 text-center text-xs text-slate-400">No products match your filters</div>';
+    return;
+  }
+  
+  container.innerHTML = list.map((p, i) => {
+    const margin = Math.round(((p.price - p.costPrice) / p.price) * 100);
+    const avatar = p.image ? `
+          <img src="${p.image}" alt="${p.name}" class="w-12 h-12 rounded-xl object-cover flex-shrink-0 shadow-sm">
+        ` : `
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-bold flex-shrink-0 shadow-sm" style="background:${p.avatarBg}">
+            ${p.name.charAt(0)}
+          </div>
+        `;
+    return `
+      <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm active:scale-[0.98] transition-transform" style="animation: slideUp 0.3s ease-out ${i*0.05}s forwards; opacity:0">
+        <div class="flex items-start gap-3">
+          ${avatar}
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-bold text-slate-800 truncate">${p.name}</h3>
+                <p class="text-[10px] text-slate-400 font-medium mt-0.5">${p.sku} · ${p.category}</p>
+              </div>
+              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${p.stock === 0 ? 'bg-red-100 text-red-700' : p.stockLevel === 'Low' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}">
+                ${p.stock === 0 ? 'Out' : p.stockLevel}
+              </span>
+            </div>
+            <div class="flex items-end justify-between mt-2">
+              <div class="flex gap-3">
+                <div>
+                  <p class="text-[9px] text-slate-400 font-semibold uppercase">Stock</p>
+                  <p class="font-mono text-sm font-bold ${p.stock === 0 ? 'text-red-500' : 'text-slate-800'}">${p.stock}</p>
+                </div>
+                <div>
+                  <p class="text-[9px] text-slate-400 font-semibold uppercase">Price</p>
+                  <p class="font-mono text-sm font-bold text-slate-800">$${p.price.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p class="text-[9px] text-slate-400 font-semibold uppercase">Margin</p>
+                  <p class="font-mono text-sm font-bold text-green-600">${margin}%</p>
+                </div>
+              </div>
+              <div class="flex gap-1.5">
+                <button onclick="editProduct(${p.id})" class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-200 transition">
+                  <i class="fa-solid fa-pen text-[10px]"></i>
+                </button>
+                <button onclick="deleteProduct(${p.id})" class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-red-500 active:bg-red-100 transition">
+                  <i class="fa-solid fa-trash text-[10px]"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Add Product';
+  document.getElementById('submitText').textContent = 'Add Product';
+  document.getElementById('productForm').reset();
+  document.getElementById('editId').value = '';
+  document.getElementById('pImage').value = '';
+  document.getElementById('pImageData').value = '';
+  updateMarginPreview();
+  updateImagePreview('');
+  document.getElementById('productModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('productModal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function editProduct(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('modalTitle').textContent = 'Edit Product';
+  document.getElementById('submitText').textContent = 'Save Changes';
+  document.getElementById('editId').value = p.id;
+  document.getElementById('pName').value = p.name;
+  document.getElementById('pSku').value = p.sku;
+  document.getElementById('pCategory').value = p.category;
+  document.getElementById('pPrice').value = p.price;
+  document.getElementById('pCost').value = p.costPrice;
+  document.getElementById('pStock').value = p.stock;
+  document.getElementById('pSupplier').value = p.supplier || '';
+  document.getElementById('pImage').value = '';
+  document.getElementById('pImageData').value = p.image || '';
+  updateMarginPreview();
+  updateImagePreview(p.image || '');
+  document.getElementById('productModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function deleteProduct(id) {
+  if (!confirm('Delete this product permanently?')) return;
+  products = products.filter(p => p.id !== id);
+  App.saveProducts(products);
+  renderProducts();
+  App.toast('Product deleted', 'xmark');
+}
+
+function updateMarginPreview() {
+  const price = parseFloat(document.getElementById('pPrice').value) || 0;
+  const cost = parseFloat(document.getElementById('pCost').value) || 0;
+  if (price > 0 && cost > 0) {
+    const margin = Math.round(((price - cost) / price) * 100);
+    document.getElementById('marginValue').textContent = margin + '%';
+    document.getElementById('marginPreview').classList.remove('hidden');
+  } else {
+    document.getElementById('marginPreview').classList.add('hidden');
+  }
+}
+
+function updateImagePreview(src) {
+  const preview = document.getElementById('imagePreview');
+  const img = document.getElementById('pImagePreview');
+  if (src) {
+    img.src = src;
+    preview.classList.remove('hidden');
+  } else {
+    img.src = '';
+    preview.classList.add('hidden');
+  }
+}
+
+document.getElementById('pImage').addEventListener('change', function() {
+  const file = this.files[0];
+  const imageData = document.getElementById('pImageData');
+  if (!file) {
+    imageData.value = '';
+    updateImagePreview('');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    imageData.value = reader.result;
+    updateImagePreview(reader.result);
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('removeImageBtn').addEventListener('click', () => {
+  document.getElementById('pImage').value = '';
+  document.getElementById('pImageData').value = '';
+  updateImagePreview('');
+});
+
+document.getElementById('pPrice').addEventListener('input', updateMarginPreview);
+document.getElementById('pCost').addEventListener('input', updateMarginPreview);
+
+document.getElementById('productForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const editId = document.getElementById('editId').value;
+  const name = document.getElementById('pName').value.trim();
+  const sku = document.getElementById('pSku').value.trim();
+  const category = document.getElementById('pCategory').value;
+  const price = parseFloat(document.getElementById('pPrice').value);
+  const costPrice = parseFloat(document.getElementById('pCost').value);
+  const stock = parseInt(document.getElementById('pStock').value);
+  const supplier = document.getElementById('pSupplier').value.trim();
+  const existingImage = document.getElementById('pImageData').value || null;
+  const imageFile = document.getElementById('pImage').files[0];
+  
+  if (!category) { App.toast('Select a category', 'triangle-exclamation'); return; }
+  
+  const stockLevel = stock === 0 ? 'Out' : stock <= 50 ? 'Low' : 'High';
+  const saveProduct = (imageData) => {
+    if (editId) {
+      const idx = products.findIndex(p => p.id == editId);
+      const oldStock = products[idx].stock;
+      products[idx] = { ...products[idx], name, sku, category, price, costPrice, stock, stockLevel, supplier, image: imageData };
+      if (stock !== oldStock) {
+        const diff = stock - oldStock;
+        const moves = App.getMovements();
+        moves.push({ id: App.nextMovementId(), type: diff > 0 ? 'in' : 'out', productId: products[idx].id, productName: name, qty: Math.abs(diff), note: 'Manual adjustment', date: App.fmtDate() });
+        App.saveMovements(moves);
+      }
+      App.saveProducts(products);
+      App.toast('Product updated', 'check');
+    } else {
+      const newP = { id: Date.now(), name, sku, category, supplier, price, costPrice, stock, stockLevel, avatarBg: App.randColor(), image: imageData };
+      products.push(newP);
+      if (stock > 0) {
+        const moves = App.getMovements();
+        moves.push({ id: App.nextMovementId(), type: 'in', productId: newP.id, productName: name, qty: stock, note: 'Initial stock', date: App.fmtDate() });
+        App.saveMovements(moves);
+      }
+      App.saveProducts(products);
+      App.toast('Product added', 'check');
+    }
+    closeModal();
+    renderProducts();
+  };
+  
+  const handleSave = (imageData) => saveProduct(imageData || null);
+  if (imageFile) {
+    const reader = new FileReader();
+    reader.onload = () => handleSave(reader.result);
+    reader.readAsDataURL(imageFile);
+  } else {
+    handleSave(existingImage);
+  }
+});
+
+['searchInput','catFilter','stockFilter','sortBy'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderProducts);
+});
+
+if (window.location.search.includes('action=add')) {
+  setTimeout(openAddModal, 300);
+}
+
+renderProducts();
+</script>
+</body>
+</html>

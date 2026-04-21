@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#ffffff">
+<title>Sales — Fikri Store</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
+.font-mono { font-family: 'DM Mono', monospace; }
+@keyframes slideUp { from { opacity:0; transform: translateY(20px);} to { opacity:1; transform: translateY(0);} }
+.modal-enter { animation: modalIn 0.25s cubic-bezier(0.22,1,0.36,1) forwards; }
+@keyframes modalIn { from { opacity:0; transform: scale(0.95) translateY(10px);} to { opacity:1; transform: scale(1) translateY(0);} }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-24">
+
+<header class="bg-white sticky top-0 z-40 border-b border-slate-100 px-4 py-3">
+  <div class="flex items-center justify-between max-w-md mx-auto">
+    <h1 class="text-lg font-bold text-slate-900">Sales</h1>
+    <button onclick="openSaleModal()" class="w-9 h-9 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition">
+      <i class="fa-solid fa-plus text-sm"></i>
+    </button>
+  </div>
+</header>
+
+<main class="max-w-md mx-auto p-4 space-y-4">
+  <div class="grid grid-cols-2 gap-3">
+    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Revenue</p>
+      <p class="font-mono text-xl font-bold text-slate-900" id="sumRevenue">$0</p>
+      <p class="text-[10px] text-slate-400 mt-1"><span id="sumOrders" class="font-semibold text-slate-600">0</span> orders</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Net Profit</p>
+      <p class="font-mono text-xl font-bold text-green-600" id="sumProfit">$0</p>
+      <p class="text-[10px] text-green-600 mt-1 font-bold" id="sumMargin">0%</p>
+    </div>
+  </div>
+
+  <div class="flex gap-2">
+    <div class="relative flex-1">
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+      <input type="text" id="salesSearch" placeholder="Search sales..." 
+        class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+    </div>
+    <select id="statusFilter" class="bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-slate-600 outline-none focus:border-orange-400">
+      <option value="all">All</option>
+      <option>Completed</option>
+      <option>Pending</option>
+      <option>Cancelled</option>
+    </select>
+  </div>
+
+  <div id="salesList" class="space-y-2"></div>
+
+  <div id="emptyState" class="hidden py-16 flex flex-col items-center text-center">
+    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+      <i class="fa-solid fa-receipt text-2xl text-slate-300"></i>
+    </div>
+    <p class="font-bold text-slate-500 text-sm">No sales yet</p>
+    <p class="text-xs text-slate-400 mt-1 mb-4">Record your first transaction</p>
+    <button onclick="openSaleModal()" class="bg-orange-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md active:scale-95 transition">Record Sale</button>
+  </div>
+</main>
+
+<div id="saleModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal()"></div>
+  <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-w-md mx-auto modal-enter max-h-[92vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white z-10 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="font-bold text-slate-900">Record Sale</h2>
+      <button onclick="closeModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <form id="saleForm" class="p-5 space-y-4">
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Product *</label>
+        <select id="sProduct" required
+          class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+          <option value="">Select product...</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Quantity *</label>
+          <input type="number" id="sQty" required min="1" value="1"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Unit Price ($) *</label>
+          <input type="number" id="sPrice" required min="0" step="0.01"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Logistics ($)</label>
+          <input type="number" id="sLogistics" min="0" step="0.01" value="0"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Status</label>
+          <select id="sStatus"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+            <option>Completed</option>
+            <option>Pending</option>
+            <option>Cancelled</option>
+          </select>
+        </div>
+      </div>
+      
+      <div id="salePreview" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 text-xs">
+        <div class="flex justify-between">
+          <span class="text-slate-500">Subtotal</span>
+          <span class="font-mono font-bold text-slate-800" id="previewSubtotal">$0</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Cost of Goods</span>
+          <span class="font-mono font-bold text-slate-500" id="previewCOGS">$0</span>
+        </div>
+        <div class="flex justify-between" id="previewLogRow">
+          <span class="text-slate-500">Logistics</span>
+          <span class="font-mono font-bold text-rose-500" id="previewLogistics">-$0</span>
+        </div>
+        <div class="border-t border-slate-200 pt-2 flex justify-between">
+          <span class="text-slate-600 font-bold">Net Profit</span>
+          <span class="font-mono font-bold text-lg" id="previewProfit">$0</span>
+        </div>
+      </div>
+      
+      <button type="submit" class="w-full bg-orange-500 active:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
+        Record Sale
+      </button>
+    </form>
+  </div>
+</div>
+
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 z-40 pb-safe">
+  <div class="flex justify-around items-center h-16 max-w-md mx-auto">
+    <a href="dashboard.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-slate-400">
+      <i class="fa-solid fa-house text-lg"></i>
+      <span class="text-[10px] font-medium">Home</span>
+    </a>
+    <a href="inventory.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-slate-400">
+      <i class="fa-solid fa-boxes-stacked text-lg"></i>
+      <span class="text-[10px] font-medium">Stock</span>
+    </a>
+    <a href="sales.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-orange-500">
+      <i class="fa-solid fa-chart-line text-lg"></i>
+      <span class="text-[10px] font-semibold">Sales</span>
+    </a>
+    <a href="reports.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-slate-400">
+      <i class="fa-solid fa-file-invoice text-lg"></i>
+      <span class="text-[10px] font-medium">Reports</span>
+    </a>
+  </div>
+</nav>
+
+<script src="app.js"></script>
+<script>
+App.init();
+if (!App.isAuth()) window.location.href = 'login.html';
+
+let products = App.getProducts();
+let sales = App.getSales();
+
+function renderSales() {
+  const q = document.getElementById('salesSearch').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  
+  let list = [...sales].reverse();
+  if (q) list = list.filter(s => (App.getProductById(s.productId)?.name || '').toLowerCase().includes(q));
+  if (status !== 'all') list = list.filter(s => s.status === status);
+  
+  const container = document.getElementById('salesList');
+  if (sales.length === 0) {
+    document.getElementById('emptyState').classList.remove('hidden');
+    container.innerHTML = '';
+    updateSummary();
+    return;
+  }
+  document.getElementById('emptyState').classList.add('hidden');
+  
+  if (list.length === 0) {
+    container.innerHTML = '<div class="py-12 text-center text-xs text-slate-400">No sales match your filters</div>';
+    return;
+  }
+  
+  container.innerHTML = list.map((s, i) => {
+    const p = App.getProductById(s.productId);
+    return `
+      <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm" style="animation: slideUp 0.3s ease-out ${i*0.05}s forwards; opacity:0">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center gap-3">
+            ${p?.image ? `<img src="${p.image}" alt="${p.name}" class="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm">` : `<div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm" style="background:${p?.avatarBg || '#94a3b8'}">${p ? p.name.charAt(0) : 'P'}</div>`}
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">${p?.name || 'Deleted Product'}</h3>
+              <p class="text-[10px] text-slate-400 font-medium">#${s.id} · ${s.date}</p>
+            </div>
+          </div>
+          <span class="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${s.status === 'Completed' ? 'bg-green-100 text-green-700' : s.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}">
+            ${s.status}
+          </span>
+        </div>
+        <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
+          <div class="flex gap-4">
+            <div>
+              <p class="text-[9px] text-slate-400 font-semibold uppercase">Qty</p>
+              <p class="font-mono text-xs font-bold text-slate-700">${s.qty}</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-semibold uppercase">Revenue</p>
+              <p class="font-mono text-xs font-bold text-slate-800">$${s.revenue.toLocaleString()}</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-semibold uppercase">Profit</p>
+              <p class="font-mono text-xs font-bold ${s.profit >= 0 ? 'text-green-600' : 'text-red-500'}">${s.profit >= 0 ? '+' : '-'}$${Math.abs(s.profit).toLocaleString()}</p>
+            </div>
+          </div>
+          <button onclick="deleteSale(${s.id})" class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-red-400 active:bg-red-100 transition">
+            <i class="fa-solid fa-trash text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateSummary() {
+  const rev = App.totalRevenue();
+  const profit = App.totalProfit();
+  const margin = rev ? Math.round((profit / rev) * 100) : 0;
+  document.getElementById('sumRevenue').textContent = '$' + rev.toLocaleString();
+  document.getElementById('sumProfit').textContent = '$' + profit.toLocaleString();
+  document.getElementById('sumMargin').textContent = margin + '% margin';
+  document.getElementById('sumOrders').textContent = sales.length;
+}
+
+function deleteSale(id) {
+  if (!confirm('Delete this sale record?')) return;
+  const sale = sales.find(s => s.id === id);
+  if (sale && sale.status === 'Completed') {
+    const p = products.find(x => x.id === sale.productId);
+    if (p) {
+      p.stock += sale.qty;
+      p.stockLevel = p.stock === 0 ? 'Out' : p.stock <= 50 ? 'Low' : 'High';
+      App.saveProducts(products);
+      const moves = App.getMovements();
+      moves.push({ id: App.nextMovementId(), type: 'in', productId: p.id, productName: p.name, qty: sale.qty, note: 'Sale deletion reversal', date: App.fmtDate() });
+      App.saveMovements(moves);
+    }
+  }
+  sales = sales.filter(s => s.id !== id);
+  App.saveSales(sales);
+  renderSales();
+  App.toast('Sale removed', 'xmark');
+}
+
+function openSaleModal() {
+  const select = document.getElementById('sProduct');
+  select.innerHTML = '<option value="">Select product...</option>' + 
+    products.filter(p => p.stock > 0).map(p => `<option value="${p.id}" data-price="${p.price}" data-cost="${p.costPrice}">${p.name} (Stock: ${p.stock})</option>`).join('');
+  document.getElementById('saleForm').reset();
+  document.getElementById('salePreview').classList.add('hidden');
+  document.getElementById('saleModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('saleModal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function updatePreview() {
+  const productId = document.getElementById('sProduct').value;
+  const qty = parseInt(document.getElementById('sQty').value) || 0;
+  const price = parseFloat(document.getElementById('sPrice').value) || 0;
+  const logistics = parseFloat(document.getElementById('sLogistics').value) || 0;
+  const product = products.find(p => p.id == productId);
+  
+  if (product && qty > 0 && price > 0) {
+    const revenue = price * qty;
+    const cogs = product.costPrice * qty;
+    const profit = revenue - cogs - logistics;
+    document.getElementById('previewSubtotal').textContent = '$' + revenue.toLocaleString();
+    document.getElementById('previewCOGS').textContent = '$' + cogs.toLocaleString();
+    document.getElementById('previewLogistics').textContent = '-$' + logistics.toLocaleString();
+    document.getElementById('previewProfit').textContent = (profit >= 0 ? '+$' : '-$') + Math.abs(profit).toLocaleString();
+    document.getElementById('previewProfit').className = 'font-mono font-bold text-lg ' + (profit >= 0 ? 'text-green-600' : 'text-red-500');
+    document.getElementById('salePreview').classList.remove('hidden');
+  } else {
+    document.getElementById('salePreview').classList.add('hidden');
+  }
+}
+
+document.getElementById('sProduct').addEventListener('change', function() {
+  const opt = this.options[this.selectedIndex];
+  if (opt.dataset.price) {
+    document.getElementById('sPrice').value = opt.dataset.price;
+    updatePreview();
+  }
+});
+document.getElementById('sQty').addEventListener('input', updatePreview);
+document.getElementById('sPrice').addEventListener('input', updatePreview);
+document.getElementById('sLogistics').addEventListener('input', updatePreview);
+
+document.getElementById('saleForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const productId = parseInt(document.getElementById('sProduct').value);
+  const qty = parseInt(document.getElementById('sQty').value);
+  const unitPrice = parseFloat(document.getElementById('sPrice').value);
+  const logistics = parseFloat(document.getElementById('sLogistics').value) || 0;
+  const status = document.getElementById('sStatus').value;
+  
+  if (!productId) { App.toast('Select a product', 'triangle-exclamation'); return; }
+  const product = products.find(p => p.id === productId);
+  if (!product) { App.toast('Product not found', 'xmark'); return; }
+  
+  if (qty <= 0) { App.toast('Invalid quantity', 'triangle-exclamation'); return; }
+  if (status === 'Completed' && qty > product.stock) {
+    App.toast(`Only ${product.stock} units available`, 'triangle-exclamation'); return;
+  }
+  
+  const revenue = unitPrice * qty;
+  const profit = ((unitPrice - product.costPrice) * qty) - logistics;
+  
+  sales.push({
+    id: App.nextSaleId(),
+    productId, qty, unitPrice,
+    costPrice: product.costPrice,
+    logistics, revenue, profit,
+    status, date: App.fmtDate()
+  });
+  
+  if (status === 'Completed') {
+    product.stock -= qty;
+    product.stockLevel = product.stock === 0 ? 'Out' : product.stock <= 50 ? 'Low' : 'High';
+    App.saveProducts(products);
+    const moves = App.getMovements();
+    moves.push({ id: App.nextMovementId(), type: 'out', productId, productName: product.name, qty, note: 'Sale', date: App.fmtDate() });
+    App.saveMovements(moves);
+  }
+  
+  App.saveSales(sales);
+  closeModal();
+  renderSales();
+  App.toast('Sale recorded!', 'check');
+});
+
+document.getElementById('salesSearch').addEventListener('input', renderSales);
+document.getElementById('statusFilter').addEventListener('change', renderSales);
+
+if (window.location.search.includes('action=add')) {
+  setTimeout(openSaleModal, 300);
+}
+
+renderSales();
+</script>
+</body>
+</html>
