@@ -7,6 +7,7 @@
 <title>Sales — Fikri Store</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -184,6 +185,30 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
   </div>
 </div>
 
+<!-- Receipt Bottom Sheet -->
+<div id="receiptSheet" class="fixed inset-0 z-[60] hidden">
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeReceiptSheet()"></div>
+  <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-w-md mx-auto modal-enter flex flex-col" style="height:90vh">
+    <!-- Sheet header -->
+    <div class="flex-shrink-0 px-5 py-4 border-b border-slate-100 flex items-center justify-between rounded-t-3xl">
+      <div>
+        <h2 class="font-bold text-slate-900">Receipt</h2>
+        <p class="text-[10px] text-slate-400 mt-0.5" id="receiptLabel">Order #—</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="savePDF()" class="text-xs font-bold bg-orange-500 text-white px-4 py-2 rounded-xl active:bg-orange-600 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-file-pdf text-[10px]"></i> Save as PDF
+        </button>
+        <button onclick="closeReceiptSheet()" class="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 active:bg-slate-200 transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+    </div>
+    <!-- Iframe renders the receipt HTML in full isolation -->
+    <iframe id="receiptFrame" class="flex-1 w-full border-0 rounded-b-3xl" style="background:#f8fafc"></iframe>
+  </div>
+</div>
+
 <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 z-40 pb-safe">
   <div class="flex justify-around items-center h-16 max-w-md mx-auto">
     <a href="dashboard.html" class="flex flex-col items-center gap-0.5 p-1 w-16 text-slate-400">
@@ -314,7 +339,7 @@ function renderSales() {
 
         <!-- Actions row -->
         <div class="px-4 pb-4 flex items-center justify-between">
-          <button onclick="App.downloadReceipt(${s.id})"
+          <button onclick="openReceiptSheet(${s.id})"
             class="flex items-center gap-1.5 text-[11px] font-bold text-orange-600 bg-orange-50 px-3 py-2 rounded-xl active:bg-orange-100 transition">
             <i class="fa-solid fa-receipt text-[10px]"></i> Receipt
           </button>
@@ -472,6 +497,56 @@ document.getElementById('saleForm').addEventListener('submit', (e) => {
 
 document.getElementById('salesSearch').addEventListener('input', renderSales);
 document.getElementById('statusFilter').addEventListener('change', renderSales);
+
+let currentReceiptHTML = ''; // Global to store HTML for direct PDF export
+let currentSaleId = null;
+
+// ── Receipt Bottom Sheet ──────────────────────────────────────────
+function openReceiptSheet(saleId) {
+  currentSaleId = saleId;
+  currentReceiptHTML = App.buildReceiptHTML(saleId);
+  if (!currentReceiptHTML) { App.toast('Receipt data not found', 'xmark'); return; }
+
+  // Encode as base64 data URI so the iframe is fully self-contained
+  // (works in both browser and Median.co WebView)
+  const b64 = btoa(unescape(encodeURIComponent(currentReceiptHTML)));
+  const frame = document.getElementById('receiptFrame');
+  frame.src = 'data:text/html;base64,' + b64;
+
+  const sale = App.getSales().find(s => s.id === saleId);
+  document.getElementById('receiptLabel').textContent = 'Order #' + (sale?.id || '—') + ' · ' + (sale?.date || '');
+
+  document.getElementById('receiptSheet').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeReceiptSheet() {
+  document.getElementById('receiptSheet').classList.add('hidden');
+  document.getElementById('receiptFrame').src = 'about:blank';
+  document.body.style.overflow = '';
+}
+
+function savePDF() {
+  if (!currentReceiptHTML) return;
+  
+  App.toast('Generating PDF...', 'file-pdf');
+  
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: `Receipt_${currentSaleId}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  // Generate PDF from the HTML string directly
+  html2pdf().set(opt).from(currentReceiptHTML).save().then(() => {
+    App.toast('PDF Saved!', 'check-circle');
+  }).catch(err => {
+    console.error('PDF Error:', err);
+    App.toast('PDF Export Failed', 'xmark');
+  });
+}
 
 if (window.location.search.includes('action=add')) {
   setTimeout(openSaleModal, 300);
