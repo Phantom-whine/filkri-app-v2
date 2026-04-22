@@ -14,6 +14,8 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
 .font-mono { font-family: 'DM Mono', monospace; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.modal-enter { animation: modalIn 0.25s cubic-bezier(0.22,1,0.36,1) forwards; }
+@keyframes modalIn { from { opacity:0; transform: scale(0.95) translateY(10px);} to { opacity:1; transform: scale(1) translateY(0);} }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-800 pb-24">
@@ -22,6 +24,10 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
   <div class="flex items-center justify-between max-w-md mx-auto">
     <h1 class="text-lg font-bold text-slate-900">Reports</h1>
     <div class="flex gap-2">
+      <!-- Shop name setting button -->
+      <button onclick="openShopNameModal()" class="text-[10px] font-bold bg-orange-50 text-orange-600 px-3 py-1.5 rounded-lg active:bg-orange-100 transition flex items-center gap-1">
+        <i class="fa-solid fa-store text-[10px]"></i> Shop
+      </button>
       <button onclick="exportInventory()" class="text-[10px] font-bold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg active:bg-slate-200 transition flex items-center gap-1">
         <i class="fa-solid fa-file-csv text-[10px]"></i> Inventory
       </button>
@@ -32,25 +38,30 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
   </div>
 </header>
 
+<!-- Shop Name Banner -->
+<div id="shopNameBanner" class="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-white text-center">
+  <p class="text-xs font-bold">🏪 <span id="shopNameDisplay">My Shop</span></p>
+</div>
+
 <main class="max-w-md mx-auto p-4 space-y-4">
   <div class="grid grid-cols-2 gap-3">
     <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Revenue</p>
-      <p class="font-mono text-xl font-bold text-slate-900" id="rRevenue">$0</p>
+      <p class="text-[9px] font-bold text-blue-500 uppercase tracking-wider mb-1">Total Revenue</p>
+      <p class="font-mono text-xl font-bold text-slate-900" id="rRevenue">₦0</p>
       <p class="text-[10px] text-slate-400 mt-1"><span id="rCompleted" class="font-semibold text-slate-600">0</span> completed</p>
     </div>
     <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Net Profit</p>
-      <p class="font-mono text-xl font-bold text-green-600" id="rProfit">$0</p>
+      <p class="text-[9px] font-bold text-green-600 uppercase tracking-wider mb-1">Net Profit</p>
+      <p class="font-mono text-xl font-bold text-green-600" id="rProfit">₦0</p>
       <p class="text-[10px] text-green-600 mt-1 font-bold" id="rMargin">0%</p>
     </div>
     <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Inventory Value</p>
-      <p class="font-mono text-xl font-bold text-slate-900" id="rInventory">$0</p>
+      <p class="text-[9px] font-bold text-purple-600 uppercase tracking-wider mb-1">Inventory Value</p>
+      <p class="font-mono text-xl font-bold text-slate-900" id="rInventory">₦0</p>
       <p class="text-[10px] text-slate-400 mt-1"><span id="rSkus" class="font-semibold text-slate-600">0</span> SKUs</p>
     </div>
     <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Stock Alerts</p>
+      <p class="text-[9px] font-bold text-red-500 uppercase tracking-wider mb-1">Stock Alerts</p>
       <p class="font-mono text-xl font-bold text-red-500" id="rAlerts">0</p>
       <p class="text-[10px] text-red-500 mt-1 font-bold" id="rOut">0 out of stock</p>
     </div>
@@ -76,37 +87,41 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
 
   <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-sm font-bold text-slate-800">Profit & Loss</h2>
+      <h2 class="text-sm font-bold text-slate-800">Profit &amp; Loss</h2>
       <span class="text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">ALL TIME</span>
     </div>
     <div class="space-y-0">
       <div class="flex justify-between py-2.5 border-b border-slate-50">
         <span class="text-xs text-slate-600 font-medium">Gross Revenue</span>
-        <span class="font-mono text-xs font-bold text-slate-900" id="plRevenue">$0</span>
+        <span class="font-mono text-xs font-bold text-slate-900" id="plRevenue">₦0</span>
       </div>
       <div class="flex justify-between py-2.5 border-b border-slate-50">
         <span class="text-xs text-slate-600 font-medium">COGS</span>
-        <span class="font-mono text-xs font-bold text-red-500" id="plCOGS">-$0</span>
+        <span class="font-mono text-xs font-bold text-red-500" id="plCOGS">-₦0</span>
       </div>
       <div class="flex justify-between py-2.5 border-b border-slate-50" id="plLogRow">
         <span class="text-xs text-slate-600 font-medium">Logistics</span>
-        <span class="font-mono text-xs font-bold text-red-500" id="plLogistics">-$0</span>
+        <span class="font-mono text-xs font-bold text-red-500" id="plLogistics">-₦0</span>
       </div>
       <div class="flex justify-between py-3 bg-green-50 rounded-xl px-3 mt-2">
         <span class="text-xs font-bold text-green-800">Net Profit</span>
-        <span class="font-mono text-sm font-extrabold text-green-700" id="plProfit">$0</span>
+        <span class="font-mono text-sm font-extrabold text-green-700" id="plProfit">₦0</span>
       </div>
       <div class="flex justify-between py-2.5 border-b border-slate-50 mt-2">
         <span class="text-xs text-slate-600 font-medium">Purchase Cost</span>
-        <span class="font-mono text-xs font-bold text-slate-700" id="plPurchase">$0</span>
+        <span class="font-mono text-xs font-bold text-slate-700" id="plPurchase">₦0</span>
       </div>
       <div class="flex justify-between py-2.5 border-b border-slate-50">
-        <span class="text-xs text-slate-600 font-medium">Total Orders</span>
+        <span class="text-xs text-slate-600 font-medium">Total Orders (Done / Pend / Canc)</span>
         <span class="font-mono text-xs font-bold text-slate-900" id="plOrders">0</span>
       </div>
-      <div class="flex justify-between py-2.5">
+      <div class="flex justify-between py-2.5 border-b border-slate-50">
         <span class="text-xs text-slate-600 font-medium">Items Sold</span>
         <span class="font-mono text-xs font-bold text-slate-900" id="plItems">0</span>
+      </div>
+      <div class="flex justify-between py-2.5">
+        <span class="text-xs text-slate-600 font-medium">Avg Order Value</span>
+        <span class="font-mono text-xs font-bold text-slate-900" id="plAvgOrder">₦0</span>
       </div>
     </div>
   </div>
@@ -117,11 +132,12 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
       <p class="text-[10px] text-slate-400">Sorted by revenue generated</p>
     </div>
     <div class="overflow-x-auto hide-scrollbar">
-      <table class="w-full text-left min-w-[500px]">
+      <table class="w-full text-left min-w-[520px]">
         <thead>
           <tr class="bg-slate-50">
             <th class="px-4 py-2.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider">Product</th>
-            <th class="px-4 py-2.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider text-right">Price</th>
+            <th class="px-4 py-2.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider text-right">Cost</th>
+            <th class="px-4 py-2.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider text-right">Sale Price</th>
             <th class="px-4 py-2.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider text-right">Sold</th>
             <th class="px-4 py-2.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider text-right">Revenue</th>
             <th class="px-4 py-2.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider text-right">Stock</th>
@@ -145,6 +161,36 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
     </div>
   </div>
 </main>
+
+<!-- Shop Name Modal -->
+<div id="shopNameModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeShopNameModal()"></div>
+  <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-w-md mx-auto modal-enter">
+    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h2 class="font-bold text-slate-900">Shop Name</h2>
+        <p class="text-[10px] text-slate-400 mt-0.5">Shown on all receipts</p>
+      </div>
+      <button onclick="closeShopNameModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Your Shop Name</label>
+        <input type="text" id="shopNameInput" placeholder="e.g. Fikri Electronics Store"
+          class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+      </div>
+      <div class="bg-orange-50 border border-orange-100 rounded-xl px-4 py-3 flex items-start gap-2.5">
+        <i class="fa-solid fa-circle-info text-orange-400 text-sm mt-0.5 flex-shrink-0"></i>
+        <p class="text-xs text-orange-700">This name appears on every receipt header and is saved locally on this device.</p>
+      </div>
+      <button onclick="saveShopName()" class="w-full bg-orange-500 active:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm flex items-center justify-center gap-2">
+        <i class="fa-solid fa-store"></i> Save Shop Name
+      </button>
+    </div>
+  </div>
+</div>
 
 <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 z-40 pb-safe">
   <div class="flex justify-around items-center h-16 max-w-md mx-auto">
@@ -176,34 +222,44 @@ const products = App.getProducts();
 const sales = App.getSales();
 const movements = App.getMovements();
 
+// Shop name banner
+const shopName = App.getShopName();
+document.getElementById('shopNameDisplay').textContent = shopName;
+
 const revenue = App.totalRevenue();
 const profit = App.totalProfit();
 const margin = revenue ? Math.round((profit / revenue) * 100) : 0;
 const invValue = App.inventoryValue();
 const alerts = products.filter(p => p.stockLevel === 'Low' || p.stock === 0).length;
 const outStock = products.filter(p => p.stock === 0).length;
+const completedSalesCount = sales.filter(s => s.status === 'Completed').length;
+const avgOrder = completedSalesCount > 0 ? Math.round(revenue / completedSalesCount) : 0;
 
-document.getElementById('rRevenue').textContent = '$' + revenue.toLocaleString();
-document.getElementById('rProfit').textContent = '$' + profit.toLocaleString();
+document.getElementById('rRevenue').textContent = '₦' + revenue.toLocaleString();
+document.getElementById('rProfit').textContent = '₦' + profit.toLocaleString();
 document.getElementById('rMargin').textContent = margin + '% margin';
-document.getElementById('rInventory').textContent = '$' + invValue.toLocaleString();
+document.getElementById('rInventory').textContent = '₦' + invValue.toLocaleString();
 document.getElementById('rSkus').textContent = products.length;
 document.getElementById('rAlerts').textContent = alerts;
 document.getElementById('rOut').textContent = outStock + ' out of stock';
-document.getElementById('rCompleted').textContent = sales.filter(s => s.status === 'Completed').length;
+document.getElementById('rCompleted').textContent = completedSalesCount;
 
-document.getElementById('plRevenue').textContent = '$' + revenue.toLocaleString();
-document.getElementById('plCOGS').textContent = '-$' + App.totalCOGS().toLocaleString();
+document.getElementById('plRevenue').textContent = '₦' + revenue.toLocaleString();
+document.getElementById('plCOGS').textContent = '-₦' + App.totalCOGS().toLocaleString();
 const logExp = App.totalLogistics();
 if (logExp > 0) {
-  document.getElementById('plLogistics').textContent = '-$' + logExp.toLocaleString();
+  document.getElementById('plLogistics').textContent = '-₦' + logExp.toLocaleString();
 } else {
   document.getElementById('plLogRow').classList.add('hidden');
 }
-document.getElementById('plProfit').textContent = '$' + profit.toLocaleString();
-document.getElementById('plPurchase').textContent = '$' + App.purchaseCost().toLocaleString();
-document.getElementById('plOrders').textContent = sales.filter(s => s.status === 'Completed').length + ' / ' + sales.filter(s => s.status === 'Pending').length + ' / ' + sales.filter(s => s.status === 'Cancelled').length;
+document.getElementById('plProfit').textContent = '₦' + profit.toLocaleString();
+document.getElementById('plPurchase').textContent = '₦' + App.purchaseCost().toLocaleString();
+document.getElementById('plOrders').textContent =
+  sales.filter(s => s.status === 'Completed').length + ' / ' +
+  sales.filter(s => s.status === 'Pending').length + ' / ' +
+  sales.filter(s => s.status === 'Cancelled').length;
 document.getElementById('plItems').textContent = App.itemsSold().toLocaleString() + ' units';
+document.getElementById('plAvgOrder').textContent = '₦' + avgOrder.toLocaleString();
 
 const completedSales = sales.filter(s => s.status !== 'Cancelled').slice(-10);
 if (completedSales.length > 0) {
@@ -221,12 +277,12 @@ if (completedSales.length > 0) {
       plugins: { legend: { display: true, labels: { usePointStyle: true, boxWidth: 6, font: { size: 10 } } } },
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#94a3b8' } },
-        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 }, color: '#94a3b8', callback: v => '$' + v } }
+        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 }, color: '#94a3b8', callback: v => '₦' + v.toLocaleString() } }
       }
     }
   });
 } else {
-  document.getElementById('trendChart').parentElement.innerHTML = '<div class="h-full flex items-center justify-center text-xs text-slate-400">No data</div>';
+  document.getElementById('trendChart').parentElement.innerHTML = '<div class="h-full flex items-center justify-center text-xs text-slate-400">No data yet</div>';
 }
 
 const catMap = {};
@@ -270,18 +326,22 @@ const sortedProducts = [...products].sort((a, b) => App.getProductRevenue(b.id) 
 perfTable.innerHTML = sortedProducts.map(p => {
   const sold = App.getProductSoldUnits(p.id);
   const rev = App.getProductRevenue(p.id);
-  const margin = Math.round(((p.price - p.costPrice) / p.price) * 100);
+  const margin = p.price > 0 ? Math.round(((p.price - p.costPrice) / p.price) * 100) : 0;
   return `
     <tr class="hover:bg-slate-50/50 transition">
       <td class="px-4 py-3">
         <div class="flex items-center gap-2">
           ${p.image ? `<img src="${p.image}" alt="${p.name}" class="w-6 h-6 rounded-md object-cover shadow-sm">` : `<div class="w-6 h-6 rounded-md flex items-center justify-center text-white text-[10px] font-bold" style="background:${p.avatarBg}">${p.name.charAt(0)}</div>`}
-          <span class="text-xs font-semibold text-slate-700">${p.name}</span>
+          <div>
+            <span class="text-xs font-semibold text-slate-700">${p.name}</span>
+            <span class="text-[9px] font-bold ml-1 ${margin >= 0 ? 'text-green-600' : 'text-red-500'}">${margin}%</span>
+          </div>
         </div>
       </td>
-      <td class="px-4 py-3 text-xs font-mono font-bold text-slate-800 text-right">$${p.price.toLocaleString()}</td>
+      <td class="px-4 py-3 text-xs font-mono font-bold text-slate-500 text-right">₦${p.costPrice.toLocaleString()}</td>
+      <td class="px-4 py-3 text-xs font-mono font-bold text-orange-600 text-right">₦${p.price.toLocaleString()}</td>
       <td class="px-4 py-3 text-xs font-mono text-slate-600 text-right">${sold}</td>
-      <td class="px-4 py-3 text-xs font-mono font-bold text-slate-800 text-right">$${rev.toLocaleString()}</td>
+      <td class="px-4 py-3 text-xs font-mono font-bold text-slate-800 text-right">₦${rev.toLocaleString()}</td>
       <td class="px-4 py-3 text-right">
         <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full ${p.stock === 0 ? 'bg-red-100 text-red-700' : p.stockLevel === 'Low' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}">${p.stock === 0 ? 'Out' : p.stock}</span>
       </td>
@@ -307,20 +367,45 @@ if (movements.length > 0) {
   `).join('');
 }
 
+// ── Shop Name Modal ──────────────────────────────────────────────
+function openShopNameModal() {
+  document.getElementById('shopNameInput').value = App.getShopName();
+  document.getElementById('shopNameModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeShopNameModal() {
+  document.getElementById('shopNameModal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function saveShopName() {
+  const name = document.getElementById('shopNameInput').value.trim();
+  if (!name) { App.toast('Enter a shop name', 'triangle-exclamation'); return; }
+  App.saveShopName(name);
+  document.getElementById('shopNameDisplay').textContent = name;
+  closeShopNameModal();
+  App.toast('Shop name saved!', 'check');
+}
+
+// ── CSV Exports ──────────────────────────────────────────────────
 function exportInventory() {
   const headers = ['Name', 'SKU', 'Category', 'Supplier', 'Stock', 'Stock Level', 'Sale Price', 'Cost Price', 'Margin %', 'Inventory Value'];
   const rows = App.getProducts().map(p => [
     p.name, p.sku, p.category, p.supplier || '', p.stock, p.stockLevel, p.price, p.costPrice,
-    Math.round(((p.price - p.costPrice) / p.price) * 100), (p.stock * p.costPrice).toFixed(2)
+    p.price > 0 ? Math.round(((p.price - p.costPrice) / p.price) * 100) : 0,
+    (p.stock * p.costPrice).toFixed(2)
   ]);
   App.exportCSV('fikri-inventory.csv', headers, rows);
 }
 
 function exportSales() {
-  const headers = ['Order ID', 'Product', 'Category', 'Qty', 'Unit Price', 'Logistics', 'Revenue', 'Profit', 'Status', 'Date'];
+  const headers = ['Order ID', 'Product', 'Category', 'Qty', 'Unit Price', 'Cost Price', 'Logistics', 'Revenue', 'Profit', 'Margin %', 'Status', 'Date'];
   const rows = App.getSales().map(s => {
     const p = App.getProductById(s.productId);
-    return [s.id, p?.name || 'Deleted', p?.category || '—', s.qty, s.unitPrice || (s.revenue / s.qty), s.logistics || 0, s.revenue, s.profit, s.status, s.date];
+    const unitPrice = s.unitPrice || (s.revenue / s.qty);
+    const margin = s.revenue > 0 ? Math.round((s.profit / s.revenue) * 100) : 0;
+    return [s.id, p?.name || 'Deleted', p?.category || '—', s.qty, unitPrice, s.costPrice || 0, s.logistics || 0, s.revenue, s.profit, margin, s.status, s.date];
   });
   App.exportCSV('fikri-sales.csv', headers, rows);
 }

@@ -21,30 +21,51 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
 <header class="bg-white sticky top-0 z-40 border-b border-slate-100 px-4 py-3">
   <div class="flex items-center justify-between max-w-md mx-auto">
     <h1 class="text-lg font-bold text-slate-900">Sales</h1>
-    <button onclick="openSaleModal()" class="w-9 h-9 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition">
+    <!-- All users can record a sale -->
+    <button onclick="openSaleModal()" id="addSaleBtn" class="w-9 h-9 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition">
       <i class="fa-solid fa-plus text-sm"></i>
     </button>
   </div>
 </header>
 
 <main class="max-w-md mx-auto p-4 space-y-4">
+
+  <!-- Summary Stats -->
   <div class="grid grid-cols-2 gap-3">
     <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Revenue</p>
-      <p class="font-mono text-xl font-bold text-slate-900" id="sumRevenue">$0</p>
+      <p class="text-[9px] font-bold text-blue-500 uppercase tracking-wider mb-1">Revenue</p>
+      <p class="font-mono text-xl font-bold text-slate-900" id="sumRevenue">₦0</p>
       <p class="text-[10px] text-slate-400 mt-1"><span id="sumOrders" class="font-semibold text-slate-600">0</span> orders</p>
     </div>
     <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Net Profit</p>
-      <p class="font-mono text-xl font-bold text-green-600" id="sumProfit">$0</p>
+      <p class="text-[9px] font-bold text-green-600 uppercase tracking-wider mb-1">Net Profit</p>
+      <p class="font-mono text-xl font-bold text-green-600" id="sumProfit">₦0</p>
       <p class="text-[10px] text-green-600 mt-1 font-bold" id="sumMargin">0%</p>
     </div>
+    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+      <p class="text-[9px] font-bold text-purple-600 uppercase tracking-wider mb-1">Items Sold</p>
+      <p class="font-mono text-xl font-bold text-slate-900" id="sumItemsSold">0</p>
+      <p class="text-[10px] text-slate-400 mt-1">completed units</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+      <p class="text-[9px] font-bold text-orange-500 uppercase tracking-wider mb-1">Avg Order</p>
+      <p class="font-mono text-xl font-bold text-slate-900" id="sumAvgOrder">₦0</p>
+      <p class="text-[10px] text-slate-400 mt-1">per transaction</p>
+    </div>
+  </div>
+
+  <!-- Staff notice banner -->
+  <div id="staffNotice" class="hidden bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-center gap-3">
+    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+      <i class="fa-solid fa-lock text-blue-500 text-xs"></i>
+    </div>
+    <p class="text-xs text-blue-700 font-medium">You can record sales but cannot edit or delete them.</p>
   </div>
 
   <div class="flex gap-2">
     <div class="relative flex-1">
       <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-      <input type="text" id="salesSearch" placeholder="Search sales..." 
+      <input type="text" id="salesSearch" placeholder="Search sales..."
         class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
     </div>
     <select id="statusFilter" class="bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-slate-600 outline-none focus:border-orange-400">
@@ -67,6 +88,7 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
   </div>
 </main>
 
+<!-- Sale Modal -->
 <div id="saleModal" class="fixed inset-0 z-50 hidden">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal()"></div>
   <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-w-md mx-auto modal-enter max-h-[92vh] overflow-y-auto">
@@ -84,6 +106,19 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
           <option value="">Select product...</option>
         </select>
       </div>
+
+      <!-- Product price info strip -->
+      <div id="productPriceInfo" class="hidden bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 grid grid-cols-2 gap-3">
+        <div>
+          <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Cost Price</p>
+          <p class="font-mono text-sm font-bold text-slate-600 mt-0.5" id="infoCostPrice">—</p>
+        </div>
+        <div>
+          <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Sale Price</p>
+          <p class="font-mono text-sm font-bold text-orange-600 mt-0.5" id="infoSalePrice">—</p>
+        </div>
+      </div>
+
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Quantity *</label>
@@ -91,14 +126,14 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
             class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Unit Price ($) *</label>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Unit Price (₦) *</label>
           <input type="number" id="sPrice" required min="0" step="0.01"
             class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Logistics ($)</label>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Logistics (₦)</label>
           <input type="number" id="sLogistics" min="0" step="0.01" value="0"
             class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
         </div>
@@ -112,26 +147,36 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
           </select>
         </div>
       </div>
-      
+
       <div id="salePreview" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 text-xs">
         <div class="flex justify-between">
           <span class="text-slate-500">Subtotal</span>
-          <span class="font-mono font-bold text-slate-800" id="previewSubtotal">$0</span>
+          <span class="font-mono font-bold text-slate-800" id="previewSubtotal">₦0</span>
         </div>
         <div class="flex justify-between">
           <span class="text-slate-500">Cost of Goods</span>
-          <span class="font-mono font-bold text-slate-500" id="previewCOGS">$0</span>
+          <span class="font-mono font-bold text-slate-500" id="previewCOGS">₦0</span>
         </div>
         <div class="flex justify-between" id="previewLogRow">
           <span class="text-slate-500">Logistics</span>
-          <span class="font-mono font-bold text-rose-500" id="previewLogistics">-$0</span>
+          <span class="font-mono font-bold text-rose-500" id="previewLogistics">-₦0</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Margin</span>
+          <span class="font-mono font-bold text-slate-700" id="previewMargin">0%</span>
         </div>
         <div class="border-t border-slate-200 pt-2 flex justify-between">
           <span class="text-slate-600 font-bold">Net Profit</span>
-          <span class="font-mono font-bold text-lg" id="previewProfit">$0</span>
+          <span class="font-mono font-bold text-lg" id="previewProfit">₦0</span>
         </div>
       </div>
-      
+
+      <!-- Staff lock reminder inside form -->
+      <div class="bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-start gap-2.5">
+        <i class="fa-solid fa-triangle-exclamation text-amber-500 text-sm mt-0.5 flex-shrink-0"></i>
+        <p class="text-xs text-amber-700 font-medium">Once submitted, this sale <strong>cannot be edited or deleted</strong> by staff. Please review carefully before recording.</p>
+      </div>
+
       <button type="submit" class="w-full bg-orange-500 active:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
         Record Sale
       </button>
@@ -165,17 +210,25 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
 App.init();
 if (!App.isAuth()) window.location.href = 'login.html';
 
+const isAdmin = App.isAdmin();
 let products = App.getProducts();
 let sales = App.getSales();
+
+// Show staff notice
+if (!isAdmin) {
+  document.getElementById('staffNotice').classList.remove('hidden');
+}
+
+function fmt(n) { return '₦' + Math.abs(n).toLocaleString(); }
 
 function renderSales() {
   const q = document.getElementById('salesSearch').value.toLowerCase();
   const status = document.getElementById('statusFilter').value;
-  
+
   let list = [...sales].reverse();
   if (q) list = list.filter(s => (App.getProductById(s.productId)?.name || '').toLowerCase().includes(q));
   if (status !== 'all') list = list.filter(s => s.status === status);
-  
+
   const container = document.getElementById('salesList');
   if (sales.length === 0) {
     document.getElementById('emptyState').classList.remove('hidden');
@@ -184,47 +237,91 @@ function renderSales() {
     return;
   }
   document.getElementById('emptyState').classList.add('hidden');
-  
+
   if (list.length === 0) {
     container.innerHTML = '<div class="py-12 text-center text-xs text-slate-400">No sales match your filters</div>';
     updateSummary();
     return;
   }
-  
+
   container.innerHTML = list.map((s, i) => {
     const p = App.getProductById(s.productId);
+    const avatar = p?.image
+      ? `<img src="${p.image}" alt="${p.name}" class="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm">`
+      : `<div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm" style="background:${p?.avatarBg || '#94a3b8'}">${p ? p.name.charAt(0) : 'P'}</div>`;
+
+    const statusBadge = s.status === 'Completed'
+      ? 'bg-green-100 text-green-700'
+      : s.status === 'Pending'
+        ? 'bg-amber-100 text-amber-700'
+        : 'bg-slate-100 text-slate-500';
+
+    const unitPrice = s.unitPrice || (s.revenue / s.qty);
+    const costPrice = s.costPrice || 0;
+    const margin = s.revenue > 0 ? Math.round((s.profit / s.revenue) * 100) : 0;
+    const logistics = s.logistics || 0;
+
+    // Delete button only for admin
+    const deleteBtn = isAdmin
+      ? `<button onclick="deleteSale(${s.id})" class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-red-400 active:bg-red-100 transition" title="Delete">
+           <i class="fa-solid fa-trash text-[10px]"></i>
+         </button>`
+      : `<span class="w-8 h-8 flex items-center justify-center text-slate-300" title="Sales are locked">
+           <i class="fa-solid fa-lock text-[10px]"></i>
+         </span>`;
+
     return `
-      <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm" style="animation: slideUp 0.3s ease-out ${i*0.05}s forwards; opacity:0">
-        <div class="flex items-start justify-between gap-3">
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden" style="animation: slideUp 0.3s ease-out ${i*0.05}s forwards; opacity:0">
+        <!-- Header row -->
+        <div class="p-4 flex items-start justify-between gap-3">
           <div class="flex items-center gap-3">
-            ${p?.image ? `<img src="${p.image}" alt="${p.name}" class="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm">` : `<div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm" style="background:${p?.avatarBg || '#94a3b8'}">${p ? p.name.charAt(0) : 'P'}</div>`}
+            ${avatar}
             <div>
               <h3 class="text-sm font-bold text-slate-800">${p?.name || 'Deleted Product'}</h3>
               <p class="text-[10px] text-slate-400 font-medium">#${s.id} · ${s.date}</p>
             </div>
           </div>
-          <span class="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${s.status === 'Completed' ? 'bg-green-100 text-green-700' : s.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}">
-            ${s.status}
-          </span>
+          <span class="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${statusBadge}">${s.status}</span>
         </div>
-        <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-          <div class="flex gap-4">
-            <div>
-              <p class="text-[9px] text-slate-400 font-semibold uppercase">Qty</p>
-              <p class="font-mono text-xs font-bold text-slate-700">${s.qty}</p>
-            </div>
-            <div>
-              <p class="text-[9px] text-slate-400 font-semibold uppercase">Revenue</p>
-              <p class="font-mono text-xs font-bold text-slate-800">$${s.revenue.toLocaleString()}</p>
-            </div>
-            <div>
-              <p class="text-[9px] text-slate-400 font-semibold uppercase">Profit</p>
-              <p class="font-mono text-xs font-bold ${s.profit >= 0 ? 'text-green-600' : 'text-red-500'}">${s.profit >= 0 ? '+' : '-'}$${Math.abs(s.profit).toLocaleString()}</p>
-            </div>
+
+        <!-- Stats grid -->
+        <div class="px-4 pb-3 grid grid-cols-3 gap-2">
+          <div class="bg-slate-50 rounded-xl px-3 py-2">
+            <p class="text-[9px] text-slate-400 font-semibold uppercase">Qty</p>
+            <p class="font-mono text-xs font-bold text-slate-700 mt-0.5">${s.qty} units</p>
           </div>
-          <button onclick="deleteSale(${s.id})" class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-red-400 active:bg-red-100 transition">
-            <i class="fa-solid fa-trash text-[10px]"></i>
+          <div class="bg-slate-50 rounded-xl px-3 py-2">
+            <p class="text-[9px] text-slate-400 font-semibold uppercase">Unit Price</p>
+            <p class="font-mono text-xs font-bold text-orange-600 mt-0.5">₦${unitPrice.toLocaleString()}</p>
+          </div>
+          <div class="bg-slate-50 rounded-xl px-3 py-2">
+            <p class="text-[9px] text-slate-400 font-semibold uppercase">Cost/unit</p>
+            <p class="font-mono text-xs font-bold text-slate-500 mt-0.5">₦${costPrice.toLocaleString()}</p>
+          </div>
+          <div class="bg-slate-50 rounded-xl px-3 py-2">
+            <p class="text-[9px] text-slate-400 font-semibold uppercase">Revenue</p>
+            <p class="font-mono text-xs font-bold text-slate-800 mt-0.5">₦${s.revenue.toLocaleString()}</p>
+          </div>
+          <div class="bg-slate-50 rounded-xl px-3 py-2">
+            <p class="text-[9px] text-slate-400 font-semibold uppercase">Profit</p>
+            <p class="font-mono text-xs font-bold mt-0.5 ${s.profit >= 0 ? 'text-green-600' : 'text-red-500'}">${s.profit >= 0 ? '+' : '-'}₦${Math.abs(s.profit).toLocaleString()}</p>
+          </div>
+          <div class="bg-slate-50 rounded-xl px-3 py-2">
+            <p class="text-[9px] text-slate-400 font-semibold uppercase">Margin</p>
+            <p class="font-mono text-xs font-bold mt-0.5 ${margin >= 0 ? 'text-green-600' : 'text-red-500'}">${margin}%</p>
+          </div>
+        </div>
+
+        <!-- Actions row -->
+        <div class="px-4 pb-4 flex items-center justify-between">
+          <button onclick="App.downloadReceipt(${s.id})"
+            class="flex items-center gap-1.5 text-[11px] font-bold text-orange-600 bg-orange-50 px-3 py-2 rounded-xl active:bg-orange-100 transition">
+            <i class="fa-solid fa-receipt text-[10px]"></i> Receipt
           </button>
+          <div class="flex gap-2 items-center">
+            ${logistics > 0 ? `<span class="text-[10px] text-slate-400">Logistics: <span class="font-mono font-bold text-rose-500">₦${logistics.toLocaleString()}</span></span>` : ''}
+            ${deleteBtn}
+          </div>
         </div>
       </div>
     `;
@@ -233,16 +330,24 @@ function renderSales() {
 }
 
 function updateSummary() {
+  const completedSales = sales.filter(s => s.status !== 'Cancelled');
   const rev = App.totalRevenue();
   const profit = App.totalProfit();
   const margin = rev ? Math.round((profit / rev) * 100) : 0;
-  document.getElementById('sumRevenue').textContent = '$' + rev.toLocaleString();
-  document.getElementById('sumProfit').textContent = '$' + profit.toLocaleString();
+  const itemsSold = App.itemsSold();
+  const completedCount = completedSales.length;
+  const avgOrder = completedCount > 0 ? Math.round(rev / completedCount) : 0;
+
+  document.getElementById('sumRevenue').textContent = '₦' + rev.toLocaleString();
+  document.getElementById('sumProfit').textContent = '₦' + profit.toLocaleString();
   document.getElementById('sumMargin').textContent = margin + '% margin';
   document.getElementById('sumOrders').textContent = sales.length;
+  document.getElementById('sumItemsSold').textContent = itemsSold.toLocaleString();
+  document.getElementById('sumAvgOrder').textContent = '₦' + avgOrder.toLocaleString();
 }
 
 function deleteSale(id) {
+  if (!isAdmin) { App.toast('Only admin can delete sales', 'xmark'); return; }
   if (!confirm('Delete this sale record?')) return;
   const sale = sales.find(s => s.id === id);
   if (sale && sale.status === 'Completed') {
@@ -264,10 +369,13 @@ function deleteSale(id) {
 
 function openSaleModal() {
   const select = document.getElementById('sProduct');
-  select.innerHTML = '<option value="">Select product...</option>' + 
-    products.filter(p => p.stock > 0).map(p => `<option value="${p.id}" data-price="${p.price}" data-cost="${p.costPrice}">${p.name} (Stock: ${p.stock})</option>`).join('');
+  select.innerHTML = '<option value="">Select product...</option>' +
+    products.filter(p => p.stock > 0).map(p =>
+      `<option value="${p.id}" data-price="${p.price}" data-cost="${p.costPrice}">${p.name} (Stock: ${p.stock})</option>`
+    ).join('');
   document.getElementById('saleForm').reset();
   document.getElementById('salePreview').classList.add('hidden');
+  document.getElementById('productPriceInfo').classList.add('hidden');
   document.getElementById('saleModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
@@ -283,15 +391,17 @@ function updatePreview() {
   const price = parseFloat(document.getElementById('sPrice').value) || 0;
   const logistics = parseFloat(document.getElementById('sLogistics').value) || 0;
   const product = products.find(p => p.id == productId);
-  
+
   if (product && qty > 0 && price > 0) {
     const revenue = price * qty;
     const cogs = product.costPrice * qty;
     const profit = revenue - cogs - logistics;
-    document.getElementById('previewSubtotal').textContent = '$' + revenue.toLocaleString();
-    document.getElementById('previewCOGS').textContent = '$' + cogs.toLocaleString();
-    document.getElementById('previewLogistics').textContent = '-$' + logistics.toLocaleString();
-    document.getElementById('previewProfit').textContent = (profit >= 0 ? '+$' : '-$') + Math.abs(profit).toLocaleString();
+    const margin = revenue > 0 ? Math.round((profit / revenue) * 100) : 0;
+    document.getElementById('previewSubtotal').textContent = '₦' + revenue.toLocaleString();
+    document.getElementById('previewCOGS').textContent = '₦' + cogs.toLocaleString();
+    document.getElementById('previewLogistics').textContent = '-₦' + logistics.toLocaleString();
+    document.getElementById('previewMargin').textContent = margin + '%';
+    document.getElementById('previewProfit').textContent = (profit >= 0 ? '+₦' : '-₦') + Math.abs(profit).toLocaleString();
     document.getElementById('previewProfit').className = 'font-mono font-bold text-lg ' + (profit >= 0 ? 'text-green-600' : 'text-red-500');
     document.getElementById('salePreview').classList.remove('hidden');
   } else {
@@ -303,7 +413,13 @@ document.getElementById('sProduct').addEventListener('change', function() {
   const opt = this.options[this.selectedIndex];
   if (opt.dataset.price) {
     document.getElementById('sPrice').value = opt.dataset.price;
+    // Show product price info strip
+    document.getElementById('infoCostPrice').textContent = '₦' + parseFloat(opt.dataset.cost).toLocaleString();
+    document.getElementById('infoSalePrice').textContent = '₦' + parseFloat(opt.dataset.price).toLocaleString();
+    document.getElementById('productPriceInfo').classList.remove('hidden');
     updatePreview();
+  } else {
+    document.getElementById('productPriceInfo').classList.add('hidden');
   }
 });
 document.getElementById('sQty').addEventListener('input', updatePreview);
@@ -317,27 +433,28 @@ document.getElementById('saleForm').addEventListener('submit', (e) => {
   const unitPrice = parseFloat(document.getElementById('sPrice').value);
   const logistics = parseFloat(document.getElementById('sLogistics').value) || 0;
   const status = document.getElementById('sStatus').value;
-  
+
   if (!productId) { App.toast('Select a product', 'triangle-exclamation'); return; }
   const product = products.find(p => p.id === productId);
   if (!product) { App.toast('Product not found', 'xmark'); return; }
-  
+
   if (qty <= 0) { App.toast('Invalid quantity', 'triangle-exclamation'); return; }
   if (status === 'Completed' && qty > product.stock) {
     App.toast(`Only ${product.stock} units available`, 'triangle-exclamation'); return;
   }
-  
+
   const revenue = unitPrice * qty;
   const profit = ((unitPrice - product.costPrice) * qty) - logistics;
-  
+
   sales.push({
     id: App.nextSaleId(),
     productId, qty, unitPrice,
     costPrice: product.costPrice,
     logistics, revenue, profit,
-    status, date: App.fmtDate()
+    status, date: App.fmtDate(),
+    recordedBy: App.getUser().role || 'staff'
   });
-  
+
   if (status === 'Completed') {
     product.stock -= qty;
     product.stockLevel = product.stock === 0 ? 'Out' : product.stock <= 50 ? 'Low' : 'High';
@@ -346,7 +463,7 @@ document.getElementById('saleForm').addEventListener('submit', (e) => {
     moves.push({ id: App.nextMovementId(), type: 'out', productId, productName: product.name, qty, note: 'Sale', date: App.fmtDate() });
     App.saveMovements(moves);
   }
-  
+
   App.saveSales(sales);
   closeModal();
   renderSales();

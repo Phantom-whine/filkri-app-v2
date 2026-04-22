@@ -10,43 +10,82 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
+.cred-card { cursor: pointer; transition: all 0.18s; border: 2px solid transparent; }
+.cred-card.selected { border-color: #f97316; background: #fff7ed; }
+.cred-card:active { transform: scale(0.97); }
 </style>
 </head>
 <body class="bg-slate-50 h-screen flex flex-col">
 
 <div class="flex-1 flex flex-col justify-center p-6 max-w-sm mx-auto w-full">
-  <div class="text-center mb-10">
+  <div class="text-center mb-8">
     <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-orange-200">
       <i class="fa-solid fa-boxes-stacked text-white text-2xl"></i>
     </div>
     <h1 class="text-2xl font-bold text-slate-900 mb-1">Welcome Back</h1>
-    <p class="text-sm text-slate-400">Sign in to manage your inventory</p>
+    <p class="text-sm text-slate-400">Sign in to manage your store</p>
   </div>
-  
+
+  <!-- Quick-select role cards -->
+  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Login as</p>
+  <div class="grid grid-cols-2 gap-2 mb-5">
+    <div id="cardAdmin" class="cred-card selected bg-white rounded-xl p-3 flex items-center gap-2.5 shadow-sm" onclick="selectRole('admin')">
+      <div class="w-9 h-9 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+        <i class="fa-solid fa-crown text-orange-500 text-sm"></i>
+      </div>
+      <div>
+        <p class="text-xs font-bold text-slate-800">Admin</p>
+        <p class="text-[10px] text-slate-400">Full access</p>
+      </div>
+    </div>
+    <div id="cardStaff" class="cred-card bg-white rounded-xl p-3 flex items-center gap-2.5 shadow-sm" onclick="selectRole('staff')">
+      <div class="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+        <i class="fa-solid fa-user text-blue-500 text-sm"></i>
+      </div>
+      <div>
+        <p class="text-xs font-bold text-slate-800">Staff</p>
+        <p class="text-[10px] text-slate-400">Sales only</p>
+      </div>
+    </div>
+  </div>
+
   <form id="loginForm" class="space-y-4">
     <div>
       <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Email Address</label>
-      <input type="email" id="email" value="admin@fikristore.com" required 
+      <input type="email" id="email" value="admin@fikristore.com" required
         class="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3.5 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
     </div>
     <div>
       <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Password</label>
-      <input type="password" id="password" value="password" required 
-        class="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3.5 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+      <div class="relative">
+        <input type="password" id="password" value="admin123" required
+          class="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3.5 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition pr-12">
+        <button type="button" onclick="togglePwd()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-7 h-7 flex items-center justify-center">
+          <i id="eyeIcon" class="fa-solid fa-eye text-sm"></i>
+        </button>
+      </div>
     </div>
-    <button type="submit" id="submitBtn" 
+    <button type="submit" id="submitBtn"
       class="w-full bg-orange-500 active:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-orange-200 text-sm flex items-center justify-center gap-2 mt-2">
       <span id="btnText">Sign In to Dashboard</span>
       <i id="btnIcon" class="fa-solid fa-arrow-right text-xs"></i>
     </button>
   </form>
-  
-  <div class="mt-8 p-4 bg-slate-100 rounded-xl">
-    <p class="text-center text-[11px] text-slate-500 mb-2 font-semibold">Demo Credentials</p>
-    <div class="flex items-center justify-center gap-2 text-[11px] font-mono text-slate-600">
-      <span class="bg-white px-2 py-1 rounded border border-slate-200">admin@fikristore.com</span>
-      <span class="text-slate-300">/</span>
-      <span class="bg-white px-2 py-1 rounded border border-slate-200">password</span>
+
+  <!-- Credentials reference -->
+  <div class="mt-6 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm space-y-2">
+    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Demo Credentials</p>
+    <div class="flex items-center gap-2">
+      <span class="w-6 h-6 bg-orange-100 rounded-md flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-crown text-orange-500 text-[10px]"></i></span>
+      <div class="text-[11px] font-mono text-slate-500 min-w-0">
+        <span class="font-semibold text-slate-700">Admin:</span> admin@fikristore.com / <span class="font-bold text-orange-600">admin123</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-user text-blue-500 text-[10px]"></i></span>
+      <div class="text-[11px] font-mono text-slate-500 min-w-0">
+        <span class="font-semibold text-slate-700">Staff:</span> staff@fikristore.com / <span class="font-bold text-blue-600">staff123</span>
+      </div>
     </div>
   </div>
 </div>
@@ -56,6 +95,21 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
 App.init();
 if (App.isAuth()) window.location.href = 'dashboard.html';
 
+let eyeVisible = false;
+function togglePwd() {
+  eyeVisible = !eyeVisible;
+  document.getElementById('password').type = eyeVisible ? 'text' : 'password';
+  document.getElementById('eyeIcon').className = eyeVisible ? 'fa-solid fa-eye-slash text-sm' : 'fa-solid fa-eye text-sm';
+}
+
+function selectRole(role) {
+  const isAdmin = role === 'admin';
+  document.getElementById('cardAdmin').classList.toggle('selected', isAdmin);
+  document.getElementById('cardStaff').classList.toggle('selected', !isAdmin);
+  document.getElementById('email').value = isAdmin ? 'admin@fikristore.com' : 'staff@fikristore.com';
+  document.getElementById('password').value = isAdmin ? 'admin123' : 'staff123';
+}
+
 document.getElementById('loginForm').addEventListener('submit', (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
@@ -63,12 +117,12 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
   const btnText = document.getElementById('btnText');
   const btnIcon = document.getElementById('btnIcon');
   const btn = document.getElementById('submitBtn');
-  
+
   btnText.textContent = 'Authenticating...';
   btnIcon.className = 'fa-solid fa-circle-notch fa-spin text-xs';
   btn.disabled = true;
   btn.classList.add('opacity-80');
-  
+
   setTimeout(() => {
     if (App.login(email, password)) {
       btnText.textContent = 'Success!';

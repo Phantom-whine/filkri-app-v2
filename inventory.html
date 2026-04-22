@@ -22,8 +22,12 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
 
 <header class="bg-white sticky top-0 z-40 border-b border-slate-100 px-4 py-3">
   <div class="flex items-center justify-between max-w-md mx-auto">
-    <h1 class="text-lg font-bold text-slate-900">Inventory</h1>
-    <button onclick="openAddModal()" class="w-9 h-9 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition">
+    <div class="flex items-center gap-2">
+      <h1 class="text-lg font-bold text-slate-900">Inventory</h1>
+      <span id="roleChip" class="hidden text-[9px] font-bold px-2 py-0.5 rounded-full"></span>
+    </div>
+    <!-- Only visible to admin -->
+    <button id="addProductBtn" onclick="openAddModal()" class="hidden w-9 h-9 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition">
       <i class="fa-solid fa-plus text-sm"></i>
     </button>
   </div>
@@ -33,7 +37,7 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
   <div class="space-y-2">
     <div class="relative">
       <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-      <input type="text" id="searchInput" placeholder="Search products, SKU..." 
+      <input type="text" id="searchInput" placeholder="Search products, SKU..."
         class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
     </div>
     <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
@@ -43,7 +47,7 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
         <option>Accessories</option>
         <option>Peripherals</option>
         <option>Clothing</option>
-        <option>Food & Beverage</option>
+        <option>Food &amp; Beverage</option>
         <option>Other</option>
       </select>
       <select id="stockFilter" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-600 outline-none focus:border-orange-400">
@@ -63,7 +67,7 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
 
   <div class="flex items-center justify-between bg-white rounded-xl px-4 py-2.5 border border-slate-100 shadow-sm">
     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"><span id="resultCount">0</span> items</span>
-    <span class="font-mono text-xs font-bold text-slate-700">Value: <span id="totalValue">$0</span></span>
+    <span class="font-mono text-xs font-bold text-slate-700">Value: <span id="totalValue">₦0</span></span>
   </div>
 
   <div id="productList" class="space-y-2"></div>
@@ -73,11 +77,12 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
       <i class="fa-solid fa-box-open text-2xl text-slate-300"></i>
     </div>
     <p class="font-bold text-slate-500 text-sm">No products yet</p>
-    <p class="text-xs text-slate-400 mt-1 mb-4">Add your first product to get started</p>
-    <button onclick="openAddModal()" class="bg-orange-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md active:scale-95 transition">Add Product</button>
+    <p class="text-xs text-slate-400 mt-1 mb-4" id="emptySubText">Products added by admin will appear here</p>
+    <button id="emptyAddBtn" onclick="openAddModal()" class="hidden bg-orange-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md active:scale-95 transition">Add Product</button>
   </div>
 </main>
 
+<!-- Add/Edit Product Modal -->
 <div id="productModal" class="fixed inset-0 z-50 hidden">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal()"></div>
   <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-w-md mx-auto modal-enter max-h-[90vh] overflow-y-auto">
@@ -91,13 +96,13 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
       <input type="hidden" id="editId">
       <div>
         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Product Name *</label>
-        <input type="text" id="pName" required placeholder="e.g. MacBook Air M2"
+        <input type="text" id="pName" required placeholder="e.g. iPhone 17 Pro Max"
           class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">SKU *</label>
-          <input type="text" id="pSku" required placeholder="MAC-001"
+          <input type="text" id="pSku" required placeholder="IPH-001"
             class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
         </div>
         <div>
@@ -109,27 +114,27 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
             <option>Accessories</option>
             <option>Peripherals</option>
             <option>Clothing</option>
-            <option>Food & Beverage</option>
+            <option>Food &amp; Beverage</option>
             <option>Other</option>
           </select>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Sale Price ($) *</label>
-          <input type="number" id="pPrice" required min="0" step="0.01" placeholder="1299"
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Sale Price (₦) *</label>
+          <input type="number" id="pPrice" required min="0" step="0.01" placeholder="2000000"
             class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Cost Price ($) *</label>
-          <input type="number" id="pCost" required min="0" step="0.01" placeholder="980"
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Cost Price (₦) *</label>
+          <input type="number" id="pCost" required min="0" step="0.01" placeholder="1500000"
             class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Stock Qty *</label>
-          <input type="number" id="pStock" required min="0" placeholder="100"
+          <input type="number" id="pStock" required min="0" placeholder="10"
             class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
         </div>
         <div>
@@ -154,6 +159,121 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
       </div>
       <button type="submit" class="w-full bg-orange-500 active:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
         <span id="submitText">Add Product</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Price Modal (Admin only) -->
+<div id="priceModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closePriceModal()"></div>
+  <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-w-md mx-auto modal-enter">
+    <div class="sticky top-0 bg-white z-10 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h2 class="font-bold text-slate-900">Update Price</h2>
+        <p class="text-[10px] text-slate-400 mt-0.5" id="priceProductName">—</p>
+      </div>
+      <button onclick="closePriceModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <form id="priceForm" class="p-5 space-y-4">
+      <input type="hidden" id="priceProductId">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Sale Price (₦) *</label>
+          <input type="number" id="newSalePrice" required min="0" step="0.01"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Cost Price (₦) *</label>
+          <input type="number" id="newCostPrice" required min="0" step="0.01"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+      </div>
+      <div id="priceMarginPreview" class="hidden bg-orange-50 border border-orange-100 rounded-xl px-4 py-3 flex items-center justify-between">
+        <span class="text-xs text-orange-700 font-semibold">New Profit Margin</span>
+        <span class="font-mono font-bold text-orange-600 text-sm" id="priceMarginValue">0%</span>
+      </div>
+      <button type="submit" class="w-full bg-orange-500 active:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm flex items-center justify-center gap-2">
+        <i class="fa-solid fa-tag"></i> Save Price
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Restock Modal (Admin only) -->
+<div id="restockModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeRestockModal()"></div>
+  <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-w-md mx-auto modal-enter max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white z-10 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h2 class="font-bold text-slate-900">Restock Product</h2>
+        <p class="text-[10px] text-slate-400 mt-0.5">Add a new purchase batch</p>
+      </div>
+      <button onclick="closeRestockModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <div class="mx-5 mt-4 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3">
+      <div id="rsAvatar" class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm"></div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-bold text-slate-800 truncate" id="rsProductName">—</p>
+        <p class="text-[10px] text-slate-400 mt-0.5">Current stock: <span id="rsCurrentStock" class="font-bold text-slate-600">—</span> units</p>
+      </div>
+    </div>
+
+    <div class="mx-5 mt-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-start gap-2.5">
+      <i class="fa-solid fa-circle-info text-blue-400 text-sm mt-0.5 flex-shrink-0"></i>
+      <p class="text-xs text-blue-700">This records a <strong>new purchase batch</strong> (industry standard). Stock will increase and history is preserved. You may update prices for this batch.</p>
+    </div>
+
+    <form id="restockForm" class="p-5 space-y-4">
+      <input type="hidden" id="rsProductId">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">New Batch Qty *</label>
+          <input type="number" id="rsQty" required min="1" placeholder="20"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Cost/Unit (₦) *</label>
+          <input type="number" id="rsCostPrice" required min="0" step="0.01" placeholder="1500000"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Sale Price/Unit (₦)</label>
+          <input type="number" id="rsSalePrice" min="0" step="0.01" placeholder="2000000"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Supplier / Note</label>
+          <input type="text" id="rsNote" placeholder="Optional"
+            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition">
+        </div>
+      </div>
+
+      <div id="rsPreview" class="hidden bg-green-50 border border-green-100 rounded-xl px-4 py-3 space-y-1.5">
+        <div class="flex justify-between text-xs">
+          <span class="text-green-700">New stock total</span>
+          <span class="font-mono font-bold text-green-800" id="rsNewTotal">—</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-green-700">Batch cost</span>
+          <span class="font-mono font-bold text-green-800" id="rsBatchCost">—</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-green-700">Batch margin</span>
+          <span class="font-mono font-bold text-green-800" id="rsBatchMargin">—</span>
+        </div>
+      </div>
+
+      <button type="submit" class="w-full bg-green-600 active:bg-green-700 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm flex items-center justify-center gap-2">
+        <i class="fa-solid fa-arrow-trend-up"></i>
+        Confirm Restock
       </button>
     </form>
   </div>
@@ -185,14 +305,29 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
 App.init();
 if (!App.isAuth()) window.location.href = 'login.html';
 
+const isAdmin = App.isAdmin();
 let products = App.getProducts();
+
+// Role chip
+const chip = document.getElementById('roleChip');
+chip.classList.remove('hidden');
+if (isAdmin) {
+  chip.textContent = 'ADMIN';
+  chip.className = 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-600';
+  document.getElementById('addProductBtn').classList.remove('hidden');
+  document.getElementById('emptyAddBtn').classList.remove('hidden');
+  document.getElementById('emptySubText').textContent = 'Add your first product to get started';
+} else {
+  chip.textContent = 'STAFF';
+  chip.className = 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-600';
+}
 
 function renderProducts() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   const cat = document.getElementById('catFilter').value;
   const stock = document.getElementById('stockFilter').value;
   const sort = document.getElementById('sortBy').value;
-  
+
   let list = [...products];
   if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
   if (cat !== 'all') list = list.filter(p => p.category === cat);
@@ -204,10 +339,10 @@ function renderProducts() {
   else if (sort === 'priceDesc') list.sort((a,b) => b.price - a.price);
   else if (sort === 'stock') list.sort((a,b) => b.stock - a.stock);
   else list.sort((a,b) => a.name.localeCompare(b.name));
-  
+
   document.getElementById('resultCount').textContent = list.length;
-  document.getElementById('totalValue').textContent = '$' + list.reduce((s,p) => s + (p.stock * p.costPrice), 0).toLocaleString();
-  
+  document.getElementById('totalValue').textContent = '₦' + list.reduce((s,p) => s + (p.stock * p.costPrice), 0).toLocaleString();
+
   const container = document.getElementById('productList');
   if (products.length === 0) {
     document.getElementById('emptyState').classList.remove('hidden');
@@ -215,21 +350,40 @@ function renderProducts() {
     return;
   }
   document.getElementById('emptyState').classList.add('hidden');
-  
+
   if (list.length === 0) {
     container.innerHTML = '<div class="py-12 text-center text-xs text-slate-400">No products match your filters</div>';
     return;
   }
-  
+
   container.innerHTML = list.map((p, i) => {
-    const margin = Math.round(((p.price - p.costPrice) / p.price) * 100);
-    const avatar = p.image ? `
-          <img src="${p.image}" alt="${p.name}" class="w-12 h-12 rounded-xl object-cover flex-shrink-0 shadow-sm">
-        ` : `
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-bold flex-shrink-0 shadow-sm" style="background:${p.avatarBg}">
-            ${p.name.charAt(0)}
-          </div>
-        `;
+    const margin = p.price > 0 ? Math.round(((p.price - p.costPrice) / p.price) * 100) : 0;
+    const avatar = p.image
+      ? `<img src="${p.image}" alt="${p.name}" class="w-12 h-12 rounded-xl object-cover flex-shrink-0 shadow-sm">`
+      : `<div class="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-bold flex-shrink-0 shadow-sm" style="background:${p.avatarBg}">${p.name.charAt(0)}</div>`;
+
+    const stockBadge = p.stock === 0
+      ? 'bg-red-100 text-red-700'
+      : p.stockLevel === 'Low'
+        ? 'bg-amber-100 text-amber-700'
+        : 'bg-green-100 text-green-700';
+
+    // Action buttons — admin sees edit price, restock, edit, delete; staff sees view only
+    const adminActions = isAdmin ? `
+      <button onclick="openPriceModal(${p.id})" class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 active:bg-blue-100 transition" title="Update Price">
+        <i class="fa-solid fa-tag text-[10px]"></i>
+      </button>
+      <button onclick="openRestockModal(${p.id})" class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center text-green-600 active:bg-green-100 transition" title="Restock">
+        <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
+      </button>
+      <button onclick="editProduct(${p.id})" class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-200 transition" title="Edit">
+        <i class="fa-solid fa-pen text-[10px]"></i>
+      </button>
+      <button onclick="deleteProduct(${p.id})" class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-red-500 active:bg-red-100 transition" title="Delete">
+        <i class="fa-solid fa-trash text-[10px]"></i>
+      </button>
+    ` : `<span class="text-[10px] text-slate-300 flex items-center gap-1"><i class="fa-solid fa-lock"></i> View only</span>`;
+
     return `
       <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm active:scale-[0.98] transition-transform" style="animation: slideUp 0.3s ease-out ${i*0.05}s forwards; opacity:0">
         <div class="flex items-start gap-3">
@@ -240,32 +394,37 @@ function renderProducts() {
                 <h3 class="text-sm font-bold text-slate-800 truncate">${p.name}</h3>
                 <p class="text-[10px] text-slate-400 font-medium mt-0.5">${p.sku} · ${p.category}</p>
               </div>
-              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${p.stock === 0 ? 'bg-red-100 text-red-700' : p.stockLevel === 'Low' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}">
+              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${stockBadge}">
                 ${p.stock === 0 ? 'Out' : p.stockLevel}
               </span>
             </div>
-            <div class="flex items-end justify-between mt-2">
-              <div class="flex gap-3">
-                <div>
-                  <p class="text-[9px] text-slate-400 font-semibold uppercase">Stock</p>
-                  <p class="font-mono text-sm font-bold ${p.stock === 0 ? 'text-red-500' : 'text-slate-800'}">${p.stock}</p>
-                </div>
-                <div>
-                  <p class="text-[9px] text-slate-400 font-semibold uppercase">Price</p>
-                  <p class="font-mono text-sm font-bold text-slate-800">$${p.price.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p class="text-[9px] text-slate-400 font-semibold uppercase">Margin</p>
-                  <p class="font-mono text-sm font-bold text-green-600">${margin}%</p>
+
+            <!-- Price strip -->
+            <div class="mt-2 mb-2 bg-slate-50 rounded-xl px-3 py-2 grid grid-cols-3 gap-2">
+              <div>
+                <p class="text-[9px] text-slate-400 font-semibold uppercase">Cost</p>
+                <p class="font-mono text-xs font-bold text-slate-600">₦${p.costPrice.toLocaleString()}</p>
+              </div>
+              <div>
+                <p class="text-[9px] text-slate-400 font-semibold uppercase">Sale Price</p>
+                <p class="font-mono text-xs font-bold text-orange-600">₦${p.price.toLocaleString()}</p>
+              </div>
+              <div>
+                <p class="text-[9px] text-slate-400 font-semibold uppercase">Margin</p>
+                <p class="font-mono text-xs font-bold text-green-600">${margin}%</p>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="bg-slate-100 rounded-lg px-3 py-1.5 flex items-center gap-1.5">
+                  <i class="fa-solid fa-cubes text-slate-400 text-[10px]"></i>
+                  <span class="font-mono text-sm font-bold ${p.stock === 0 ? 'text-red-500' : 'text-slate-800'}">${p.stock}</span>
+                  <span class="text-[10px] text-slate-400">units</span>
                 </div>
               </div>
-              <div class="flex gap-1.5">
-                <button onclick="editProduct(${p.id})" class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-200 transition">
-                  <i class="fa-solid fa-pen text-[10px]"></i>
-                </button>
-                <button onclick="deleteProduct(${p.id})" class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-red-500 active:bg-red-100 transition">
-                  <i class="fa-solid fa-trash text-[10px]"></i>
-                </button>
+              <div class="flex gap-1.5 items-center">
+                ${adminActions}
               </div>
             </div>
           </div>
@@ -275,7 +434,9 @@ function renderProducts() {
   }).join('');
 }
 
+// ─── Add / Edit Modal ────────────────────────────────────────────
 function openAddModal() {
+  if (!isAdmin) { App.toast('Admin access required', 'xmark'); return; }
   document.getElementById('modalTitle').textContent = 'Add Product';
   document.getElementById('submitText').textContent = 'Add Product';
   document.getElementById('productForm').reset();
@@ -294,6 +455,7 @@ function closeModal() {
 }
 
 function editProduct(id) {
+  if (!isAdmin) { App.toast('Admin access required', 'xmark'); return; }
   const p = products.find(x => x.id === id);
   if (!p) return;
   document.getElementById('modalTitle').textContent = 'Edit Product';
@@ -315,6 +477,7 @@ function editProduct(id) {
 }
 
 function deleteProduct(id) {
+  if (!isAdmin) { App.toast('Admin access required', 'xmark'); return; }
   if (!confirm('Delete this product permanently?')) return;
   products = products.filter(p => p.id !== id);
   App.saveProducts(products);
@@ -337,28 +500,16 @@ function updateMarginPreview() {
 function updateImagePreview(src) {
   const preview = document.getElementById('imagePreview');
   const img = document.getElementById('pImagePreview');
-  if (src) {
-    img.src = src;
-    preview.classList.remove('hidden');
-  } else {
-    img.src = '';
-    preview.classList.add('hidden');
-  }
+  if (src) { img.src = src; preview.classList.remove('hidden'); }
+  else { img.src = ''; preview.classList.add('hidden'); }
 }
 
 document.getElementById('pImage').addEventListener('change', function() {
   const file = this.files[0];
   const imageData = document.getElementById('pImageData');
-  if (!file) {
-    imageData.value = '';
-    updateImagePreview('');
-    return;
-  }
+  if (!file) { imageData.value = ''; updateImagePreview(''); return; }
   const reader = new FileReader();
-  reader.onload = () => {
-    imageData.value = reader.result;
-    updateImagePreview(reader.result);
-  };
+  reader.onload = () => { imageData.value = reader.result; updateImagePreview(reader.result); };
   reader.readAsDataURL(file);
 });
 
@@ -373,6 +524,7 @@ document.getElementById('pCost').addEventListener('input', updateMarginPreview);
 
 document.getElementById('productForm').addEventListener('submit', (e) => {
   e.preventDefault();
+  if (!isAdmin) { App.toast('Admin access required', 'xmark'); return; }
   const editId = document.getElementById('editId').value;
   const name = document.getElementById('pName').value.trim();
   const sku = document.getElementById('pSku').value.trim();
@@ -383,9 +535,9 @@ document.getElementById('productForm').addEventListener('submit', (e) => {
   const supplier = document.getElementById('pSupplier').value.trim();
   const existingImage = document.getElementById('pImageData').value || null;
   const imageFile = document.getElementById('pImage').files[0];
-  
+
   if (!category) { App.toast('Select a category', 'triangle-exclamation'); return; }
-  
+
   const stockLevel = stock === 0 ? 'Out' : stock <= 50 ? 'Low' : 'High';
   const saveProduct = (imageData) => {
     if (editId) {
@@ -414,7 +566,7 @@ document.getElementById('productForm').addEventListener('submit', (e) => {
     closeModal();
     renderProducts();
   };
-  
+
   const handleSave = (imageData) => saveProduct(imageData || null);
   if (imageFile) {
     const reader = new FileReader();
@@ -425,6 +577,156 @@ document.getElementById('productForm').addEventListener('submit', (e) => {
   }
 });
 
+// ─── Edit Price Modal ────────────────────────────────────────────
+function openPriceModal(id) {
+  if (!isAdmin) { App.toast('Admin access required', 'xmark'); return; }
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('priceProductId').value = p.id;
+  document.getElementById('priceProductName').textContent = p.name;
+  document.getElementById('newSalePrice').value = p.price;
+  document.getElementById('newCostPrice').value = p.costPrice;
+  updatePriceMarginPreview();
+  document.getElementById('priceModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePriceModal() {
+  document.getElementById('priceModal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function updatePriceMarginPreview() {
+  const price = parseFloat(document.getElementById('newSalePrice').value) || 0;
+  const cost = parseFloat(document.getElementById('newCostPrice').value) || 0;
+  if (price > 0 && cost > 0) {
+    const margin = Math.round(((price - cost) / price) * 100);
+    document.getElementById('priceMarginValue').textContent = margin + '%';
+    document.getElementById('priceMarginPreview').classList.remove('hidden');
+  } else {
+    document.getElementById('priceMarginPreview').classList.add('hidden');
+  }
+}
+
+document.getElementById('newSalePrice').addEventListener('input', updatePriceMarginPreview);
+document.getElementById('newCostPrice').addEventListener('input', updatePriceMarginPreview);
+
+document.getElementById('priceForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (!isAdmin) { App.toast('Admin access required', 'xmark'); return; }
+  const id = parseInt(document.getElementById('priceProductId').value);
+  const newPrice = parseFloat(document.getElementById('newSalePrice').value);
+  const newCost = parseFloat(document.getElementById('newCostPrice').value);
+  if (!newPrice || newPrice <= 0) { App.toast('Enter a valid sale price', 'triangle-exclamation'); return; }
+  if (!newCost || newCost <= 0) { App.toast('Enter a valid cost price', 'triangle-exclamation'); return; }
+  const idx = products.findIndex(x => x.id === id);
+  if (idx === -1) { App.toast('Product not found', 'xmark'); return; }
+  products[idx].price = newPrice;
+  products[idx].costPrice = newCost;
+  App.saveProducts(products);
+  closePriceModal();
+  renderProducts();
+  App.toast('Price updated!', 'check');
+});
+
+// ─── Restock Modal ───────────────────────────────────────────────
+function openRestockModal(id) {
+  if (!isAdmin) { App.toast('Admin access required', 'xmark'); return; }
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById('rsProductId').value = p.id;
+  document.getElementById('rsProductName').textContent = p.name;
+  document.getElementById('rsCurrentStock').textContent = p.stock;
+  document.getElementById('rsCostPrice').value = p.costPrice;
+  document.getElementById('rsSalePrice').value = p.price;
+  document.getElementById('rsQty').value = '';
+  document.getElementById('rsNote').value = '';
+  document.getElementById('rsPreview').classList.add('hidden');
+
+  const av = document.getElementById('rsAvatar');
+  if (p.image) {
+    av.style.background = '';
+    av.innerHTML = `<img src="${p.image}" class="w-10 h-10 rounded-xl object-cover">`;
+  } else {
+    av.style.background = p.avatarBg;
+    av.textContent = p.name.charAt(0).toUpperCase();
+  }
+
+  document.getElementById('restockModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeRestockModal() {
+  document.getElementById('restockModal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function updateRestockPreview() {
+  const id = parseInt(document.getElementById('rsProductId').value);
+  const qty = parseInt(document.getElementById('rsQty').value) || 0;
+  const cost = parseFloat(document.getElementById('rsCostPrice').value) || 0;
+  const sale = parseFloat(document.getElementById('rsSalePrice').value) || 0;
+  const p = products.find(x => x.id === id);
+
+  if (p && qty > 0 && cost > 0) {
+    const newTotal = p.stock + qty;
+    const batchCost = qty * cost;
+    const margin = sale > 0 ? Math.round(((sale - cost) / sale) * 100) : 0;
+    document.getElementById('rsNewTotal').textContent = newTotal + ' units';
+    document.getElementById('rsBatchCost').textContent = '₦' + batchCost.toLocaleString();
+    document.getElementById('rsBatchMargin').textContent = sale > 0 ? margin + '%' : 'N/A';
+    document.getElementById('rsPreview').classList.remove('hidden');
+  } else {
+    document.getElementById('rsPreview').classList.add('hidden');
+  }
+}
+
+['rsQty','rsCostPrice','rsSalePrice'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateRestockPreview);
+});
+
+document.getElementById('restockForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (!isAdmin) { App.toast('Admin access required', 'xmark'); return; }
+
+  const id = parseInt(document.getElementById('rsProductId').value);
+  const qty = parseInt(document.getElementById('rsQty').value);
+  const newCost = parseFloat(document.getElementById('rsCostPrice').value);
+  const newSale = parseFloat(document.getElementById('rsSalePrice').value) || null;
+  const note = document.getElementById('rsNote').value.trim() || 'Restock';
+
+  if (!qty || qty <= 0) { App.toast('Enter a valid quantity', 'triangle-exclamation'); return; }
+  if (!newCost || newCost <= 0) { App.toast('Enter a valid cost price', 'triangle-exclamation'); return; }
+
+  const idx = products.findIndex(x => x.id === id);
+  if (idx === -1) { App.toast('Product not found', 'xmark'); return; }
+
+  products[idx].stock += qty;
+  products[idx].costPrice = newCost;
+  if (newSale) products[idx].price = newSale;
+  products[idx].stockLevel = products[idx].stock === 0 ? 'Out' : products[idx].stock <= 50 ? 'Low' : 'High';
+  App.saveProducts(products);
+
+  const moves = App.getMovements();
+  moves.push({
+    id: App.nextMovementId(),
+    type: 'in',
+    productId: id,
+    productName: products[idx].name,
+    qty,
+    note: `Restock – ${note}`,
+    costPrice: newCost,
+    date: App.fmtDate()
+  });
+  App.saveMovements(moves);
+
+  closeRestockModal();
+  renderProducts();
+  App.toast(`+${qty} units restocked!`, 'check');
+});
+
+// ─── Filter listeners ────────────────────────────────────────────
 ['searchInput','catFilter','stockFilter','sortBy'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderProducts);
 });
