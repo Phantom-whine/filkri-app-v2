@@ -185,6 +185,54 @@ body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transpare
   </div>
 </div>
 
+<!-- Status Edit Modal -->
+<div id="statusModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeStatusModal()"></div>
+  <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-w-md mx-auto modal-enter max-h-[92vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white z-10 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="font-bold text-slate-900">Update Status</h2>
+      <button onclick="closeStatusModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <form id="statusForm" class="p-5 space-y-4">
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">New Status</label>
+        <div class="space-y-2">
+          <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition">
+            <input type="radio" name="newStatus" value="Completed" class="w-4 h-4" required>
+            <span class="flex-1">
+              <span class="text-sm font-bold text-slate-800">Completed</span>
+              <p class="text-xs text-slate-500">Sale is finalized and confirmed</p>
+            </span>
+          </label>
+          <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition">
+            <input type="radio" name="newStatus" value="Pending" class="w-4 h-4" required>
+            <span class="flex-1">
+              <span class="text-sm font-bold text-slate-800">Pending</span>
+              <p class="text-xs text-slate-500">Sale awaiting confirmation</p>
+            </span>
+          </label>
+          <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition">
+            <input type="radio" name="newStatus" value="Cancelled" class="w-4 h-4" required>
+            <span class="flex-1">
+              <span class="text-sm font-bold text-slate-800">Cancelled</span>
+              <p class="text-xs text-slate-500">Sale is cancelled or void</p>
+            </span>
+          </label>
+        </div>
+      </div>
+      <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-start gap-2.5">
+        <i class="fa-solid fa-info-circle text-blue-600 text-sm mt-0.5 flex-shrink-0"></i>
+        <p class="text-xs text-blue-700"><strong>Note:</strong> Changing status to/from Completed will adjust inventory stock accordingly.</p>
+      </div>
+      <button type="submit" class="w-full bg-blue-500 active:bg-blue-600 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
+        Update Status
+      </button>
+    </form>
+  </div>
+</div>
+
 <!-- Receipt Bottom Sheet -->
 <div id="receiptSheet" class="fixed inset-0 z-[60] hidden">
   <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeReceiptSheet()"></div>
@@ -339,10 +387,16 @@ function renderSales() {
 
         <!-- Actions row -->
         <div class="px-4 pb-4 flex items-center justify-between">
-          <button onclick="openReceiptSheet(${s.id})"
-            class="flex items-center gap-1.5 text-[11px] font-bold text-orange-600 bg-orange-50 px-3 py-2 rounded-xl active:bg-orange-100 transition">
-            <i class="fa-solid fa-receipt text-[10px]"></i> Receipt
-          </button>
+          <div class="flex gap-2">
+            <button onclick="openReceiptSheet(${s.id})"
+              class="flex items-center gap-1.5 text-[11px] font-bold text-orange-600 bg-orange-50 px-3 py-2 rounded-xl active:bg-orange-100 transition">
+              <i class="fa-solid fa-receipt text-[10px]"></i> Receipt
+            </button>
+            ${isAdmin && s.status !== 'Completed' ? `<button onclick="openStatusModal(${s.id})"
+              class="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-2 rounded-xl active:bg-blue-100 transition">
+              <i class="fa-solid fa-edit text-[10px]"></i> Status
+            </button>` : ''}
+          </div>
           <div class="flex gap-2 items-center">
             ${logistics > 0 ? `<span class="text-[10px] text-slate-400">Logistics: <span class="font-mono font-bold text-rose-500">₦${logistics.toLocaleString()}</span></span>` : ''}
             ${deleteBtn}
@@ -390,6 +444,70 @@ function deleteSale(id) {
   App.saveSales(sales);
   renderSales();
   App.toast('Sale removed', 'xmark');
+}
+
+let statusEditingId = null;
+
+function openStatusModal(id) {
+  if (!isAdmin) { App.toast('Only admin can edit status', 'xmark'); return; }
+  statusEditingId = id;
+  const sale = sales.find(s => s.id === id);
+  if (!sale) return;
+  document.querySelector(`input[name="newStatus"][value="${sale.status}"]`).checked = true;
+  document.getElementById('statusModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeStatusModal() {
+  document.getElementById('statusModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  statusEditingId = null;
+}
+
+function updateSaleStatus(oldStatus, newStatus, sale) {
+  const product = products.find(p => p.id === sale.productId);
+  if (!product) return;
+
+  const moves = App.getMovements();
+
+  // Handle inventory adjustments when changing status
+  if (oldStatus === 'Completed' && newStatus !== 'Completed') {
+    // Sale was completed, now being changed to pending/cancelled
+    // Return stock to inventory
+    product.stock += sale.qty;
+    product.stockLevel = product.stock === 0 ? 'Out' : product.stock <= 50 ? 'Low' : 'High';
+    moves.push({ 
+      id: App.nextMovementId(), 
+      type: 'in', 
+      productId: product.id, 
+      productName: product.name, 
+      qty: sale.qty, 
+      note: `Status change from ${oldStatus} to ${newStatus}`, 
+      date: App.fmtDate() 
+    });
+  } else if (oldStatus !== 'Completed' && newStatus === 'Completed') {
+    // Sale was pending/cancelled, now being completed
+    // Remove stock from inventory
+    if (product.stock < sale.qty) {
+      App.toast(`Insufficient stock! Only ${product.stock} available.`, 'xmark');
+      return false;
+    }
+    product.stock -= sale.qty;
+    product.stockLevel = product.stock === 0 ? 'Out' : product.stock <= 50 ? 'Low' : 'High';
+    moves.push({ 
+      id: App.nextMovementId(), 
+      type: 'out', 
+      productId: product.id, 
+      productName: product.name, 
+      qty: sale.qty, 
+      note: `Status change from ${oldStatus} to ${newStatus}`, 
+      date: App.fmtDate() 
+    });
+  }
+
+  App.saveProducts(products);
+  App.saveMovements(moves);
+  return true;
 }
 
 function openSaleModal() {
@@ -493,6 +611,32 @@ document.getElementById('saleForm').addEventListener('submit', (e) => {
   closeModal();
   renderSales();
   App.toast('Sale recorded!', 'check');
+});
+
+document.getElementById('statusForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (statusEditingId === null) return;
+  
+  const sale = sales.find(s => s.id === statusEditingId);
+  if (!sale) return;
+  
+  const newStatus = document.querySelector('input[name="newStatus"]:checked').value;
+  const oldStatus = sale.status;
+  
+  if (oldStatus === newStatus) {
+    App.toast('Status unchanged', 'info');
+    closeStatusModal();
+    return;
+  }
+  
+  const success = updateSaleStatus(oldStatus, newStatus, sale);
+  if (!success) return;
+  
+  sale.status = newStatus;
+  App.saveSales(sales);
+  closeStatusModal();
+  renderSales();
+  App.toast(`Status updated to ${newStatus}`, 'check');
 });
 
 document.getElementById('salesSearch').addEventListener('input', renderSales);

@@ -99,7 +99,9 @@ const App = (function() {
     },
 
     logout() {
-      Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
+      // Only clear auth data, keep app data (products, sales, etc.)
+      localStorage.removeItem(STORAGE_KEYS.TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.USER);
       window.location.href = 'login.html';
     },
 
